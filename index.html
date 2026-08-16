@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0E1330">
+<title>엉뚱한 화가를 찾아라</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E1330;          /* 밤의 교실 */
+  --ink-2:#171E45;
+  --paper:#FFFDF6;        /* 도화지 */
+  --chalk:#E8EBFF;
+  --dim:#8E97C7;
+  --yellow:#FFD84D;       /* 돋보기 불빛 */
+  --mint:#4DE1C1;
+  --coral:#FF6B6B;
+  --line:rgba(232,235,255,.16);
+  --r:22px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:
+    radial-gradient(120% 80% at 50% -10%, #1E2760 0%, transparent 60%),
+    var(--ink);
+  color:var(--chalk);
+  font-family:'Jua', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  overscroll-behavior:none;
+  -webkit-user-select:none;user-select:none;
+}
+#app{
+  min-height:100dvh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+}
+.screen{display:none;width:100%;max-width:720px;margin:auto;animation:in .28s ease}
+.screen.on{display:flex;flex-direction:column;gap:14px}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.screen{animation:none}}
+
+/* ── 지문 시그니처 ── */
+.fp{display:block;width:min(46vw,190px);margin:0 auto;filter:drop-shadow(0 0 26px rgba(255,216,77,.28))}
+.fp path{fill:none;stroke:var(--yellow);stroke-linecap:round;stroke-width:3.4;
+  stroke-dasharray:var(--l);stroke-dashoffset:var(--l);animation:trace 2.4s ease forwards}
+.fp path:nth-child(2){animation-delay:.12s;stroke:var(--mint)}
+.fp path:nth-child(3){animation-delay:.24s}
+.fp path:nth-child(4){animation-delay:.36s;stroke:var(--coral)}
+.fp path:nth-child(5){animation-delay:.48s}
+@keyframes trace{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.fp path{animation:none;stroke-dashoffset:0}}
+
+h1{
+  font-family:'Gaegu',cursive;font-weight:700;
+  font-size:clamp(38px,10.5vw,74px);line-height:.98;margin:2px 0 0;text-align:center;letter-spacing:-1px;
+}
+h1 em{font-style:normal;color:var(--yellow);position:relative;white-space:nowrap}
+h1 em::after{content:'';position:absolute;left:-4px;right:-4px;bottom:.1em;height:.28em;background:rgba(255,107,107,.35);border-radius:6px;z-index:-1}
+.sub{text-align:center;color:var(--dim);font-size:clamp(14px,3.6vw,17px);line-height:1.6;margin:0}
+h2{font-family:'Gaegu',cursive;font-size:clamp(28px,7.4vw,42px);margin:0;text-align:center;line-height:1.1}
+.eyebrow{font-size:13px;letter-spacing:3px;color:var(--yellow);text-align:center;margin:0}
+
+.card{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card h3{margin:0 0 10px;font-size:16px;color:var(--dim);font-weight:400}
+
+/* 버튼 */
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.btn{
+  width:100%;padding:18px;border-radius:18px;font-size:clamp(19px,5vw,24px);
+  background:var(--yellow);color:#241A00;box-shadow:0 5px 0 #C9A417;transition:transform .08s,box-shadow .08s;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #C9A417}
+.btn.ghost{background:transparent;color:var(--chalk);border:2px solid var(--line);box-shadow:none}
+.btn.ghost:active{transform:translateY(2px)}
+.btn.mint{background:var(--mint);color:#00312A;box-shadow:0 5px 0 #2AA98F}
+.btn.mint:active{box-shadow:0 1px 0 #2AA98F}
+.btn.coral{background:var(--coral);color:#3A0000;box-shadow:0 5px 0 #C24A4A}
+.btn.coral:active{box-shadow:0 1px 0 #C24A4A}
+.btn:disabled{opacity:.35;box-shadow:none}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chip{padding:14px 0;border-radius:14px;border:2px solid var(--line);font-size:20px;text-align:center}
+.chip.sel{background:var(--mint);color:#00312A;border-color:var(--mint)}
+
+.names{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.names input{
+  width:100%;padding:13px 12px;border-radius:13px;border:2px solid var(--line);
+  background:#0B1030;color:var(--chalk);font-family:inherit;font-size:17px;text-align:center;
+}
+.names input:focus{outline:none;border-color:var(--yellow)}
+
+.toggle{display:flex;gap:8px}
+.toggle button{flex:1;padding:12px;border-radius:14px;border:2px solid var(--line);font-size:15px;line-height:1.35}
+.toggle button.sel{background:var(--yellow);color:#241A00;border-color:var(--yellow)}
+
+/* 차례/OX */
+.big-name{font-family:'Gaegu',cursive;font-size:clamp(46px,13vw,86px);text-align:center;line-height:1;color:var(--yellow);word-break:keep-all}
+.ox{display:flex;gap:12px}
+.ox button{
+  flex:1;aspect-ratio:1;border-radius:30px;font-size:clamp(64px,18vw,110px);
+  display:flex;align-items:center;justify-content:center;border:4px solid var(--line);
+}
+.ox .o{color:var(--coral);border-color:rgba(255,107,107,.45);background:rgba(255,107,107,.08)}
+.ox .x{color:var(--mint);border-color:rgba(77,225,193,.45);background:rgba(77,225,193,.08)}
+.ox button:active{transform:scale(.96)}
+.secret{text-align:center;color:var(--dim);font-size:14px}
+
+/* 그리기 */
+.topbar{display:flex;align-items:center;gap:10px;justify-content:space-between;font-size:14px;color:var(--dim)}
+.pill{background:var(--ink-2);border:1px solid var(--line);padding:6px 12px;border-radius:99px;white-space:nowrap}
+.order{display:flex;gap:5px;align-items:center}
+.dot{width:9px;height:9px;border-radius:99px;background:var(--line)}
+.dot.done{background:var(--dim)}
+.dot.now{background:var(--yellow);transform:scale(1.5)}
+
+.instruct{
+  text-align:center;padding:12px;border-radius:16px;font-size:clamp(18px,4.8vw,24px);
+  background:rgba(232,235,255,.07);border:1px dashed var(--line);
+}
+.instruct.bad{background:rgba(255,107,107,.14);border-color:rgba(255,107,107,.5);color:#FFC7C7}
+.instruct.good{background:rgba(77,225,193,.13);border-color:rgba(77,225,193,.5);color:#BFFFF1}
+
+.ref{display:flex;gap:12px;align-items:center;background:var(--paper);border-radius:16px;padding:10px 14px}
+.ref svg{width:clamp(64px,18vw,92px);height:clamp(64px,18vw,92px);flex:none}
+.ref .meta{color:#3A4166;line-height:1.35}
+.ref .meta b{display:block;font-size:clamp(20px,5.4vw,26px);color:#0E1330}
+.ref .meta span{font-size:12px}
+
+.board{position:relative;width:100%;aspect-ratio:4/3;background:var(--paper);border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.board canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+.board .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#B9BFD6;font-size:clamp(15px,4vw,19px);pointer-events:none}
+.board.locked canvas{pointer-events:none}
+
+.crayon{display:flex;align-items:center;gap:9px;justify-content:center;color:var(--dim);font-size:14px}
+.swatch{width:26px;height:26px;border-radius:8px;border:2px solid rgba(255,255,255,.5)}
+
+.gallery{display:grid;gap:12px}
+.gallery .frame{background:var(--paper);border-radius:16px;padding:8px}
+.gallery canvas{width:100%;display:block;border-radius:10px}
+.cap{font-size:13px;color:var(--dim);text-align:center}
+
+.vote{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vote button{padding:20px 8px;border-radius:18px;border:3px solid var(--line);font-size:clamp(20px,5.4vw,26px);word-break:keep-all}
+.vote button:active{background:var(--yellow);color:#241A00}
+
+.tally{display:flex;flex-direction:column;gap:8px}
+.bar{display:flex;align-items:center;gap:10px;font-size:16px}
+.bar .fill{height:14px;border-radius:99px;background:var(--dim);min-width:6px}
+.bar .fill.top{background:var(--yellow)}
+.bar .nm{width:5.5em;text-align:right;color:var(--dim);word-break:keep-all}
+
+.verdict{text-align:center;padding:20px;border-radius:20px;border:2px solid var(--line)}
+.verdict.win{background:rgba(77,225,193,.12);border-color:var(--mint)}
+.verdict.lose{background:rgba(255,107,107,.12);border-color:var(--coral)}
+.verdict .k{font-family:'Gaegu',cursive;font-size:clamp(34px,9vw,54px);line-height:1.1}
+.verdict .v{color:var(--dim);font-size:15px;margin-top:6px;line-height:1.6}
+footer{margin-top:16px;color:#4C5488;font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- 1. 타이틀 -->
+<section class="screen on" id="s-title">
+  <svg class="fp" viewBox="0 0 120 130" aria-hidden="true">
+    <path d="M60 118c-14-14-18-34-14-54" style="--l:100"/>
+    <path d="M60 112c-8-16-9-33-3-46 7-14 26-14 33 0" style="--l:120"/>
+    <path d="M38 96c-8-22-6-45 6-56 14-13 38-9 47 8" style="--l:150"/>
+    <path d="M26 84C18 56 24 30 42 18c20-13 46-6 56 14" style="--l:180"/>
+    <path d="M74 106c6-14 8-30 4-42-4-13-20-16-28-6" style="--l:120"/>
+  </svg>
+  <h1>엉뚱한 화가를<br><em>찾아라</em></h1>
+  <p class="sub">한 사람씩 한 획.<br>범인은 몰래 <b style="color:var(--coral)">엉뚱한 선</b>을 그립니다.<br><small style="opacity:.75">일반 버전 · 엉뚱한 버전 중에 골라요</small></p>
+  <button class="btn" onclick="go('setup')">시작하기</button>
+  <button class="btn ghost" onclick="go('how')">노는 방법</button>
+  <footer>모둠 1대(스마트폰·태블릿·PC)를 돌려 가며 사용해요</footer>
+</section>
+
+<!-- 2. 방법 -->
+<section class="screen" id="s-how">
+  <h2>노는 방법</h2>
+  <div class="card"><h3>공통</h3>
+    <p style="margin:0;line-height:1.85;font-size:16px">
+      ① 기기를 받으면 <b>“나 범인 맞아?”</b>에 몰래 O·X를 눌러요.<br>
+      ② X면 위에 뜬 그림을 보고 <b>한 획</b>만 그려요.<br>
+      ③ 모둠 인원만큼 다 그리면 완성작을 함께 봐요.<br>
+      ④ 마지막에 다 같이 범인을 지목해요.
+    </p>
+  </div>
+  <div class="card"><h3>일반 버전 — 범인은</h3>
+    <p style="margin:0;line-height:1.85;font-size:16px">
+      <b style="color:var(--coral)">엉뚱한 선 한 획</b>만 그려요. 그린 그대로 바로 화면에 남습니다.
+      티 나지 않게 <b>살짝만</b> 이상하게 긋는 게 요령이에요.
+    </p>
+  </div>
+  <div class="card"><h3>엉뚱한 버전 — 범인은</h3>
+    <p style="margin:0;line-height:1.85;font-size:16px">
+      <b>두 번</b> 그려요. 먼저 엉뚱하게, 그다음 제대로.<br>
+      화면엔 제대로 그린 선만 보이다가, 다른 사람이 <b style="color:var(--yellow)">몇 획</b>(1~3획, 매번 랜덤) 더 그으면
+      슬그머니 <b style="color:var(--coral)">엉뚱한 선</b>으로 바뀝니다. 언제 바뀔지는 아무도 몰라요.
+    </p>
+  </div>
+  <button class="btn ghost" onclick="go('title')">돌아가기</button>
+</section>
+
+<!-- 3. 설정 -->
+<section class="screen" id="s-setup">
+  <h2>모둠 만들기</h2>
+  <div class="card">
+    <h3>모둠 인원</h3>
+    <div class="chips" id="countChips"></div>
+  </div>
+  <div class="card">
+    <h3>이름 넣기</h3>
+    <div class="names" id="nameInputs"></div>
+  </div>
+  <div class="card">
+    <h3>게임 버전</h3>
+    <div class="toggle" id="verToggle">
+      <button data-v="simple" class="sel">일반 버전<br><small style="opacity:.7">엉뚱한 선이 바로 보여요</small></button>
+      <button data-v="twist">엉뚱한 버전<br><small style="opacity:.7">나중에 슬그머니 뒤바뀌어요</small></button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>범인 정하기</h3>
+    <div class="toggle" id="modeToggle">
+      <button data-m="auto" class="sel">자동으로 몰래 배정<br><small style="opacity:.7">기기가 한 명을 뽑아요</small></button>
+      <button data-m="manual">우리끼리 정하기<br><small style="opacity:.7">O를 누른 사람이 범인</small></button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>라운드 수</h3>
+    <div class="chips" id="roundChips" style="grid-template-columns:repeat(3,1fr)"></div>
+  </div>
+  <button class="btn mint" onclick="startGame()">게임 시작</button>
+  <button class="btn ghost" onclick="go('title')">뒤로</button>
+</section>
+
+<!-- 4. 비밀 역할 확인 -->
+<section class="screen" id="s-role">
+  <p class="eyebrow">비밀 확인</p>
+  <h2 id="roleTitle">차례대로 확인하세요</h2>
+  <div id="roleBody"></div>
+</section>
+
+<!-- 5. 차례 넘기기 -->
+<section class="screen" id="s-pass">
+  <p class="eyebrow" id="passRound">1라운드</p>
+  <div class="big-name" id="passName">이름</div>
+  <p class="secret">다른 사람은 화면을 보지 마세요 👀</p>
+  <button class="btn" onclick="askOX()">준비됐어요</button>
+</section>
+
+<!-- 6. OX -->
+<section class="screen" id="s-ox">
+  <h2 id="oxQ">범인 맞아?</h2>
+  <div class="ox">
+    <button class="o" onclick="answerOX(true)">O</button>
+    <button class="x" onclick="answerOX(false)">X</button>
+  </div>
+  <p class="secret">아무도 못 보게 살짝 누르세요</p>
+</section>
+
+<!-- 7. 그리기 -->
+<section class="screen" id="s-draw">
+  <div class="topbar">
+    <span class="pill" id="drawRound">1라운드</span>
+    <div class="order" id="orderDots"></div>
+    <span class="pill" id="drawWho">이름</span>
+  </div>
+  <div class="instruct" id="instruct">한 획만 그리세요</div>
+  <div class="ref" id="refBox"></div>
+  <div class="board" id="board">
+    <canvas id="cv"></canvas>
+    <div class="hint" id="hint">여기에 손가락으로 한 획!</div>
+  </div>
+  <div class="crayon"><span class="swatch" id="swatch"></span><span id="crayonName">지금 색</span></div>
+  <div class="row">
+    <button class="btn ghost" id="btnUndo" onclick="undoStroke()" disabled>다시 그리기</button>
+    <button class="btn mint" id="btnDone" onclick="finishStroke()" disabled>다 그렸어요</button>
+  </div>
+</section>
+
+<!-- 8. 라운드 확인 -->
+<section class="screen" id="s-review">
+  <p class="eyebrow" id="reviewEyebrow">1라운드 완성</p>
+  <h2 id="reviewTitle">다 같이 볼까요?</h2>
+  <div class="ref" id="reviewRef"></div>
+  <div class="gallery"><div class="frame"><canvas id="reviewCv"></canvas></div></div>
+  <p class="cap">어? 어딘가 이상한 선이 있는데…</p>
+  <button class="btn" id="btnReviewNext">다음 라운드</button>
+</section>
+
+<!-- 9. 투표 -->
+<section class="screen" id="s-vote">
+  <p class="eyebrow">범인 지목</p>
+  <h2><span id="voterName"></span>, 누가 범인일까?</h2>
+  <div class="vote" id="voteBtns"></div>
+</section>
+
+<!-- 10. 결과 -->
+<section class="screen" id="s-result">
+  <div class="verdict" id="verdict"></div>
+  <div class="card"><h3>지목 결과</h3><div class="tally" id="tally"></div></div>
+  <div class="gallery" id="resultGallery"></div>
+  <button class="btn ghost" id="btnToggleTruth">범인이 진짜 그리려던 선 보기</button>
+  <button class="btn" onclick="location.reload()">한 판 더</button>
+</section>
+
+</div>
+<script>
+/* 따라 그리기용 간단한 선 그림 100개
+   좌표계 0~100 정사각형. p: 패스 배열, c: 원 배열 [cx,cy,r] */
+const PICS = [
+{n:'집',p:['M8,50 50,18 92,50','M20,44V88H80V44','M42,88V64H58V88']},
+{n:'나무',c:[[50,38,24]],p:['M50,88V56','M50,68 38,58','M50,74 62,64']},
+{n:'꽃',c:[[50,46,8],[50,24,13],[72,46,13],[50,68,13],[28,46,13]],p:['M50,80V94','M50,86 Q36,82 32,90']},
+{n:'해',c:[[50,50,20]],p:['M50,22V8','M50,78V92','M22,50H8','M78,50H92','M64,36 74,26','M36,64 26,74','M64,64 74,74','M36,36 26,26']},
+{n:'달',p:['M62,14 A38,38 0 1,0 62,86 A30,30 0 1,1 62,14Z']},
+{n:'별',p:['M50,10 61,38 91,38 67,56 76,86 50,68 24,86 33,56 9,38 39,38Z']},
+{n:'구름',p:['M26,72 A15,15 0 0,1 28,42 A21,21 0 0,1 68,38 A17,17 0 0,1 74,72Z']},
+{n:'우산',p:['M8,55 A42,42 0 0,1 92,55Z','M50,55V80 A10,10 0 0,0 70,80']},
+{n:'물고기',p:['M18,50 Q44,24 70,50 Q44,76 18,50Z','M70,50 92,32V68Z'],c:[[30,45,2.5]]},
+{n:'고양이',c:[[50,55,28],[38,48,3],[62,48,3]],p:['M28,38 24,14 46,28','M72,38 76,14 54,28','M50,56 46,61 54,61Z','M50,61V67','M22,52 6,48','M22,60 6,64','M78,52 94,48','M78,60 94,64']},
+{n:'강아지',c:[[50,54,24],[41,50,3],[59,50,3],[50,64,4]],p:['M30,36 Q10,46 14,68 Q18,80 32,72','M70,36 Q90,46 86,68 Q82,80 68,72','M50,68V74','M40,78 Q50,85 60,78']},
+{n:'토끼',c:[[50,62,24],[42,58,3],[58,58,3]],p:['M40,40 Q34,10 44,12 Q50,20 48,42','M60,40 Q66,10 56,12 Q50,20 52,42','M50,68 46,73 54,73Z']},
+{n:'곰',c:[[50,58,26],[28,32,10],[72,32,10],[40,52,3],[60,52,3],[50,68,7]],p:['M50,62V70']},
+{n:'돼지',c:[[50,55,27],[50,64,10],[46,64,2],[54,64,2],[40,46,3],[60,46,3]],p:['M28,32 24,18 40,26','M72,32 76,18 60,26']},
+{n:'병아리',c:[[50,54,24],[42,48,3]],p:['M26,54 12,60 26,64','M42,78 40,92','M58,78 60,92']},
+{n:'새',p:['M14,58 Q32,34 48,56','M52,56 Q68,34 86,58','M48,56 Q50,64 52,56']},
+{n:'나비',c:[[31,38,16],[69,38,16],[34,68,12],[66,68,12]],p:['M50,24V80','M48,24 38,10','M52,24 62,10']},
+{n:'벌',c:[[26,52,10],[22,49,2]],p:['M36,52 Q36,34 58,34 Q84,34 84,52 Q84,70 58,70 Q36,70 36,52Z','M50,36V68','M66,35V69','M84,52 96,46','M84,58 96,64','M52,34 Q48,14 64,16 Q70,24 62,34','M66,34 Q78,18 90,26 Q88,34 76,36']},
+{n:'달팽이',c:[[58,58,20],[58,58,10]],p:['M38,74H18 Q10,74 12,62','M14,60 10,48','M20,58 22,46']},
+{n:'거북이',c:[[88,54,8],[90,51,1.8]],p:['M14,68 Q14,34 48,34 Q80,34 80,68Z','M14,68H80','M47,34V68','M30,38 28,68','M64,38 66,68','M22,68V80','M40,68V78','M56,68V78','M74,68V80']},
+{n:'문어',c:[[50,40,24],[42,36,3],[58,36,3]],p:['M28,56 Q22,80 12,86','M40,62 Q36,84 30,90','M60,62 Q64,84 70,90','M72,56 Q78,80 88,86']},
+{n:'게',c:[[50,58,22],[42,52,3],[58,52,3]],p:['M28,48 Q14,38 20,26 Q28,34 26,42','M72,48 Q86,38 80,26 Q72,34 74,42','M30,74 24,86','M44,80 40,92','M56,80 60,92','M70,74 76,86']},
+{n:'상어',p:['M12,58 Q40,36 84,52 Q60,74 12,58Z','M50,41 56,18 66,45','M84,52 92,38 94,64Z'],c:[[30,52,2.5]]},
+{n:'고래',p:['M14,58 Q40,30 70,54 Q44,80 14,58Z','M70,54 90,40V70Z','M40,32 Q38,18 46,12','M40,32 Q46,20 56,18'],c:[[30,50,2.5]]},
+{n:'코끼리',c:[[52,44,22],[44,40,3],[60,40,3]],p:['M30,30 Q8,28 10,50 Q12,66 32,60','M74,30 Q96,28 94,50 Q92,66 72,60','M44,62 Q40,86 52,88 Q62,88 60,76']},
+{n:'기린',p:['M38,88V56 Q38,44 50,40','M50,40V20','M48,20 Q64,14 68,24 Q68,32 58,32','M58,88V60','M52,20 50,12','M60,22 62,12'],c:[[62,24,2]]},
+{n:'사자',c:[[50,52,30],[50,52,19],[43,48,3],[57,48,3]],p:['M50,56 46,60 54,60Z','M50,60V66','M32,60 18,56','M32,66 18,70','M68,60 82,56','M68,66 82,70']},
+{n:'원숭이',c:[[50,50,22],[26,48,9],[74,48,9],[50,58,14],[42,44,3],[58,44,3]],p:['M50,58V62','M44,66 Q50,71 56,66']},
+{n:'개구리',c:[[38,32,10],[62,32,10],[38,32,3],[62,32,3],[50,56,24]],p:['M32,64 Q50,76 68,64','M28,74 20,88','M72,74 80,88']},
+{n:'뱀',p:['M14,80 Q40,80 40,62 Q40,44 60,44 Q80,44 80,28 Q80,16 62,16','M62,16 54,10','M62,16 54,22'],c:[[66,14,2]]},
+{n:'자동차',p:['M8,66V50H28L38,34H68L78,50H92V66Z','M38,34V50','M60,34V50'],c:[[28,70,8],[72,70,8]]},
+{n:'버스',p:['M10,26H90V70H10Z','M18,34H42V50H18Z','M50,34H82V50H50Z','M10,58H90'],c:[[28,74,7],[72,74,7]]},
+{n:'트럭',p:['M8,40H52V68H8Z','M52,48H72L84,60V68H52Z','M14,46H44V58H14Z'],c:[[24,72,7],[70,72,7]]},
+{n:'자전거',c:[[24,64,18],[76,64,18]],p:['M24,64 44,34 76,64','M44,34H62','M44,34 50,64','M62,34 68,28','M36,30H54']},
+{n:'기차',p:['M8,66V34H40V66Z','M40,66V46H86V66Z','M16,40H32V52H16Z','M22,34V20H32V34'],c:[[22,72,6],[48,72,6],[74,72,6]]},
+{n:'배',p:['M12,66H88L76,84H24Z','M50,66V14','M50,20 82,52H50','M50,26 22,52H50']},
+{n:'비행기',p:['M50,10 Q57,10 58,34L90,54V64L58,54V72L70,84V90L50,82 30,90V84L42,72V54L10,64V54L42,34 Q43,10 50,10Z']},
+{n:'로켓',p:['M50,8 Q70,32 70,60H30 Q30,32 50,8Z','M30,50 16,74 30,64','M70,50 84,74 70,64','M42,72H58L54,88H46Z'],c:[[50,38,8]]},
+{n:'헬리콥터',p:['M14,60 Q14,42 40,42H62 Q80,46 88,60 Q80,72 60,72H30 Q14,72 14,60Z','M62,46 88,22','M50,32V42','M14,32H86','M26,74V84H74'],c:[[36,58,8]]},
+{n:'열기구',c:[[50,40,28]],p:['M34,60 42,80','M66,60 58,80','M50,68V80','M40,80H60L58,92H42Z']},
+{n:'사과',p:['M50,30 Q22,26 22,54 Q22,86 50,86 Q78,86 78,54 Q78,26 50,30Z','M50,30V14','M50,18 Q66,10 72,20 Q62,26 50,20']},
+{n:'바나나',p:['M18,34 Q22,74 62,80 Q86,82 88,60 Q70,68 52,54 Q36,42 34,30Z']},
+{n:'수박',p:['M12,40 A38,38 0 0,0 88,40Z','M12,40H88'],c:[[38,58,2.5],[56,54,2.5],[50,70,2.5]]},
+{n:'딸기',p:['M50,88 Q18,66 24,42 Q30,26 50,32 Q70,26 76,42 Q82,66 50,88Z','M42,26 50,32 58,26','M50,32V22'],c:[[40,50,2],[58,50,2],[50,62,2],[36,66,2],[62,66,2]]},
+{n:'포도',c:[[50,30,10],[36,44,10],[64,44,10],[50,50,10],[42,64,10],[58,64,10],[50,78,10]],p:['M50,20V8','M50,12 Q66,6 72,16']},
+{n:'당근',p:['M50,90 Q28,52 34,40 Q50,34 62,40 Q66,54 50,90Z','M42,52 56,58','M46,68 58,72','M42,36 32,18','M56,36 68,18']},
+{n:'아이스크림',p:['M32,44H68L50,90Z','M36,54H64','M28,44 A22,22 0 0,1 72,44'],c:[[38,34,12],[62,34,12],[50,28,13]]},
+{n:'케이크',p:['M18,50H82V84H18Z','M18,62H82','M50,50V38','M46,32 50,24 54,32 Q54,38 46,38Z']},
+{n:'도넛',c:[[50,50,32],[50,50,12]],p:['M30,28 24,22','M70,28 76,22','M50,18V10','M26,60 18,64','M74,60 82,64','M50,82V90']},
+{n:'피자',p:['M50,12 88,80H12Z','M12,80H88'],c:[[42,56,4],[60,60,4],[50,70,4]]},
+{n:'햄버거',p:['M14,46 A36,24 0 0,1 86,46','M12,52H88','M14,60H86','M12,68 Q50,86 88,68'],c:[[34,38,2],[50,34,2],[66,38,2]]},
+{n:'핫도그',p:['M12,64 Q12,44 34,42H70 Q90,44 90,62 Q90,76 68,76H32 Q12,76 12,64Z','M22,58 Q40,48 58,58 Q74,66 82,56']},
+{n:'사탕',c:[[50,50,20]],p:['M30,50 12,36V64Z','M70,50 88,36V64Z','M44,44 56,56','M44,56 56,44']},
+{n:'컵케이크',p:['M26,48H74L66,88H34Z','M34,62H66','M26,48 Q20,28 40,30 Q46,16 60,26 Q80,26 74,48']},
+{n:'우유팩',p:['M28,36H72V88H28Z','M28,36 50,16 72,36','M50,16V36','M38,52H62V68H38Z']},
+{n:'커피잔',p:['M22,36H72V70 Q72,82 58,82H36 Q22,82 22,70Z','M72,44H84 Q92,52 84,62H72','M34,28V16','M50,28V14','M66,28V16']},
+{n:'주전자',p:['M26,50H74V78 Q74,86 66,86H34 Q26,86 26,78Z','M26,58 12,50 12,66','M74,58 86,52','M40,50 Q50,38 60,50','M50,38V30','M42,30H58']},
+{n:'숟가락',p:['M50,14 Q68,14 68,34 Q68,52 50,52 Q32,52 32,34 Q32,14 50,14Z','M50,52V90']},
+{n:'포크',p:['M34,12V40 Q34,52 50,52 Q66,52 66,40V12','M42,12V38','M58,12V38','M50,52V90']},
+{n:'접시',c:[[50,50,36],[50,50,26]]},
+{n:'시계',c:[[50,52,34]],p:['M50,52V30','M50,52 68,62','M50,18V24','M84,52H78','M50,86V80','M16,52H22']},
+{n:'안경',c:[[28,52,18],[72,52,18]],p:['M46,50H54','M10,44 4,34','M90,44 96,34']},
+{n:'모자',p:['M22,60 Q22,26 50,26 Q78,26 78,60','M10,60H90 Q90,72 50,72 Q10,72 10,60Z']},
+{n:'신발',p:['M16,76V44 Q16,38 24,40L34,50 Q54,58 84,62 Q92,64 92,76Z','M26,50 32,42','M36,56 42,48','M46,60 52,52']},
+{n:'양말',p:['M32,12H62V50 Q62,60 74,68 Q86,76 80,86 Q74,94 62,88L38,72 Q30,66 30,54V12Z','M32,22H62']},
+{n:'티셔츠',p:['M30,20 12,34 24,48 30,42V86H70V42L76,48 88,34 70,20Z','M30,20 Q50,32 70,20']},
+{n:'바지',p:['M28,14H72V90H54L50,50 46,90H28Z','M28,26H72']},
+{n:'가방',p:['M18,40H82V86H18Z','M36,40V28 Q36,16 50,16 Q64,16 64,28V40','M18,54H82','M50,58V66']},
+{n:'장화',p:['M28,10H58V50 Q58,58 68,62L82,68 Q90,72 90,82V88H28Z','M28,70H90']},
+{n:'열쇠',c:[[26,40,16],[26,40,6]],p:['M38,50 78,86','M64,68 72,60','M74,78 82,70']},
+{n:'자물쇠',p:['M22,46H78V88H22Z','M34,46V32 Q34,16 50,16 Q66,16 66,32V46','M50,70V78'],c:[[50,64,6]]},
+{n:'연필',p:['M14,86 22,62 74,12 88,26 38,78Z','M22,62 38,78','M68,18 82,32','M14,86 26,80']},
+{n:'지우개',p:['M20,54 36,36H84L68,54Z','M20,54H68V78H20Z','M68,54 84,36V60L68,78Z']},
+{n:'가위',c:[[30,78,10],[62,78,10]],p:['M36,70 78,14','M56,70 18,14','M46,52 42,46']},
+{n:'자',p:['M10,42H90V64H10Z','M22,42V52','M34,42V56','M46,42V52','M58,42V56','M70,42V52','M82,42V56']},
+{n:'책',p:['M50,26 Q34,16 12,20V76 Q34,72 50,82 Q66,72 88,76V20 Q66,16 50,26Z','M50,26V82']},
+{n:'공책',p:['M24,12H80V88H24Z','M32,12V88','M40,26H70','M40,40H70','M40,54H70','M40,68H62']},
+{n:'컴퓨터',p:['M16,20H84V64H16Z','M24,28H76V56H24Z','M40,64 36,78H64L60,64','M28,84H72']},
+{n:'휴대폰',p:['M30,8H70V92H30Z','M30,20H70','M30,80H70'],c:[[50,86,3]]},
+{n:'텔레비전',p:['M12,26H88V74H12Z','M22,34H78V66H22Z','M34,74 28,88','M66,74 72,88','M50,26 38,10','M50,26 62,10']},
+{n:'카메라',p:['M10,32H90V80H10Z','M34,32 40,20H60L66,32'],c:[[50,56,18],[50,56,9],[78,42,3]]},
+{n:'전구',c:[[50,42,24]],p:['M38,62H62','M38,70H62','M40,78H60','M42,86H58','M38,62 Q34,54 34,44','M62,62 Q66,54 66,44']},
+{n:'촛불',p:['M34,42H66V88H34Z','M50,42V32','M50,10 Q62,24 50,32 Q38,24 50,10Z','M34,54H66']},
+{n:'선물상자',p:['M12,38H88V88H12Z','M50,38V88','M12,52H88','M50,38 Q30,38 30,24 Q30,14 42,18 Q50,24 50,38','M50,38 Q70,38 70,24 Q70,14 58,18 Q50,24 50,38']},
+{n:'풍선',c:[[50,38,26]],p:['M50,64 46,72 54,72Z','M50,72 Q42,82 50,92']},
+{n:'하트',p:['M50,88 Q10,58 14,36 Q18,16 34,18 Q46,20 50,34 Q54,20 66,18 Q82,16 86,36 Q90,58 50,88Z']},
+{n:'왕관',p:['M14,74H86L82,26 62,48 50,20 38,48 18,26Z','M14,74V86H86V74'],c:[[50,32,4]]},
+{n:'반지',c:[[50,58,26]],p:['M50,32 38,16H62Z']},
+{n:'유령',p:['M20,84V46 Q20,16 50,16 Q80,16 80,46V84L68,74 56,84 44,74 32,84Z','M44,60 Q50,66 56,60'],c:[[40,44,4],[62,44,4]]},
+{n:'눈사람',c:[[50,28,18],[50,66,26],[44,24,2],[56,24,2]],p:['M28,54 10,46','M72,54 90,46','M32,14H68','M36,14V6H64V14','M50,60V74']},
+{n:'산',p:['M6,80 34,30 52,58 66,36 94,80Z','M26,48 34,42 42,48','M60,46 66,42 72,48']},
+{n:'무지개',p:['M10,82 A40,40 0 0,1 90,82','M20,82 A30,30 0 0,1 80,82','M30,82 A20,20 0 0,1 70,82','M40,82 A10,10 0 0,1 60,82']},
+{n:'야자수 섬',p:['M8,84 Q50,72 92,84','M52,84 Q46,52 50,34','M50,34 Q30,26 20,40','M50,34 Q70,24 82,38','M50,34 Q42,14 26,16','M50,34 Q64,16 76,22']},
+{n:'텐트',p:['M10,84 50,18 90,84Z','M50,18V84','M36,84 50,54 64,84','M10,84H90']},
+{n:'성',p:['M14,88V36H86V88Z','M14,36V22H26V32H38V22H50V32H62V22H74V32H86V22','M40,88V62 Q50,52 60,62V88','M24,46H36V58H24Z','M64,46H76V58H64Z']},
+{n:'등대',p:['M34,88 40,40H60L66,88Z','M36,56H64','M34,40H66V28H34Z','M40,28 44,14H56L60,28','M50,14V6','M34,34 12,26','M66,34 88,26']},
+{n:'풍차',p:['M36,88 44,40H56L64,88Z','M50,40V30','M50,26 26,10','M50,26 74,10','M50,26 34,50','M50,26 66,50'],c:[[50,26,4]]},
+{n:'축구공',c:[[50,50,34]],p:['M50,30 66,42 60,62H40L34,42Z','M50,30V16','M66,42 80,38','M60,62 70,76','M40,62 30,76','M34,42 20,38']},
+{n:'농구공',c:[[50,50,34]],p:['M50,16V84','M16,50H84','M28,26 Q44,50 28,74','M72,26 Q56,50 72,74']},
+{n:'음표',c:[[30,74,12],[66,64,12]],p:['M42,74V26 78,16V64','M42,36 78,26']}
+];
+
+/* 엉뚱한 화가를 찾아라 — 게임 로직 */
+
+const COLORS = ['#E23B3B','#F0762A','#F2B705','#8CC63F','#2AA84A','#20B2AA',
+                '#2E86DE','#3F3FBF','#8E44AD','#D6409F','#8B5E3C','#2B2B2B'];
+const COLOR_NAMES = ['빨강','주황','노랑','연두','초록','청록','파랑','남색','보라','분홍','갈색','검정'];
+
+const S = {
+  count: 4,
+  names: [],
+  rounds: 2,
+  version: 'simple',  // simple(일반) | twist(엉뚱한)
+  mode: 'auto',
+  culprit: null,      // 범인 index (auto면 시작부터, manual이면 첫 O에서 결정)
+  roleStep: 0,
+  round: 0,           // 0-based
+  turn: 0,            // 0-based
+  data: [],           // [{pic, strokes:[{pts, color, by, alt}]}]
+  pending: null,      // 범인이 처음 그린 엉뚱한 선
+  phase: 'normal',    // normal | wrong | proper
+  voter: 0,
+  votes: []
+};
+
+/* ── 화면 전환 ── */
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+/* ── 설정 화면 ── */
+function buildSetup(){
+  const cc = document.getElementById('countChips');
+  cc.innerHTML='';
+  for(let i=2;i<=9;i++){
+    const b=document.createElement('button');
+    b.className='chip'+(i===S.count?' sel':'');
+    b.textContent=i+'명';
+    b.onclick=()=>{S.count=i;buildSetup();};
+    cc.appendChild(b);
+  }
+  const ni = document.getElementById('nameInputs');
+  const prev = [...ni.querySelectorAll('input')].map(x=>x.value);
+  ni.innerHTML='';
+  for(let i=0;i<S.count;i++){
+    const inp=document.createElement('input');
+    inp.type='text'; inp.maxLength=6;
+    inp.placeholder=(i+1)+'번 이름';
+    inp.value = prev[i] || '';
+    ni.appendChild(inp);
+  }
+  const rc = document.getElementById('roundChips');
+  rc.innerHTML='';
+  [1,2,3].forEach(r=>{
+    const b=document.createElement('button');
+    b.className='chip'+(r===S.rounds?' sel':'');
+    b.textContent=r+'라운드';
+    b.onclick=()=>{S.rounds=r;buildSetup();};
+    rc.appendChild(b);
+  });
+}
+document.querySelectorAll('#modeToggle button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('#modeToggle button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); S.mode=b.dataset.m;
+  };
+});
+document.querySelectorAll('#verToggle button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('#verToggle button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); S.version=b.dataset.v;
+  };
+});
+buildSetup();
+
+/* ── 그림 SVG ── */
+function picSVG(pic, size){
+  let s=`<svg viewBox="0 0 100 100" width="${size||100}" height="${size||100}"><g fill="none" stroke="#141A3A" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">`;
+  (pic.c||[]).forEach(c=>s+=`<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}"/>`);
+  (pic.p||[]).forEach(d=>s+=`<path d="${d}"/>`);
+  return s+'</g></svg>';
+}
+function refHTML(pic, label){
+  return picSVG(pic)+`<div class="meta"><b>${pic.n}</b><span>${label||'이 그림을 보고 한 획씩 이어 그려요'}</span></div>`;
+}
+
+/* ── 게임 시작 ── */
+function startGame(){
+  const inputs=[...document.querySelectorAll('#nameInputs input')];
+  S.names = inputs.map((x,i)=> (x.value.trim() || (i+1)+'번'));
+  S.data=[]; S.round=0; S.turn=0; S.votes=[]; S.voter=0;
+
+  const pool=[...Array(PICS.length).keys()];
+  for(let r=0;r<S.rounds;r++){
+    const idx = pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+    S.data.push({pic:PICS[idx], strokes:[]});
+  }
+
+  if(S.mode==='auto'){
+    S.culprit = Math.floor(Math.random()*S.names.length);
+    S.roleStep = 0;
+    showRole();
+  } else {
+    S.culprit = null;
+    showPass();
+  }
+}
+
+/* ── 비밀 역할 확인 ── */
+function showRole(){
+  go('role');
+  const body=document.getElementById('roleBody');
+  if(S.roleStep >= S.names.length){
+    document.getElementById('roleTitle').textContent='모두 확인했나요?';
+    body.innerHTML='<p class="secret" style="margin:0 0 14px">범인은 절대 티 내지 마세요 🤫</p>';
+    const b=document.createElement('button'); b.className='btn'; b.textContent='1라운드 시작';
+    b.onclick=()=>{S.round=0;S.turn=0;showPass();};
+    body.appendChild(b);
+    return;
+  }
+  const nm=S.names[S.roleStep];
+  document.getElementById('roleTitle').textContent = nm+' 차례';
+  body.innerHTML='<p class="secret" style="margin:0 0 14px">'+nm+'만 보세요. 다른 사람은 눈 감기!</p>';
+  const b=document.createElement('button'); b.className='btn ghost'; b.textContent='내 역할 열기';
+  b.onclick=()=>revealRole();
+  body.appendChild(b);
+}
+function revealRole(){
+  const nm=S.names[S.roleStep];
+  const isC = S.roleStep===S.culprit;
+  const body=document.getElementById('roleBody');
+  body.innerHTML =
+    `<div class="verdict ${isC?'lose':'win'}"><div class="k">${isC?'당신이 범인!':'평범한 화가'}</div>
+     <div class="v">${isC
+        ? (S.version==='twist'
+            ? '차례마다 O를 누르고 두 번 그려요. 엉뚱한 선은 숨겨졌다가 나중에 나타납니다.'
+            : '차례마다 O를 누르고 엉뚱한 선을 한 획 그어요. 티 나지 않게 살짝만!')
+        : '차례마다 X를 누르고 그냥 잘 그리면 돼요.'}</div></div>`;
+  const b=document.createElement('button'); b.className='btn'; b.textContent='확인했어요, 다음 사람';
+  b.onclick=()=>{S.roleStep++;showRole();};
+  body.appendChild(b);
+}
+
+/* ── 차례 넘기기 ── */
+function showPass(){
+  go('pass');
+  document.getElementById('passRound').textContent=(S.round+1)+'라운드 · '+(S.turn+1)+'번째 획';
+  document.getElementById('passName').textContent=S.names[S.turn];
+}
+
+/* ── OX ── */
+function askOX(){
+  go('ox');
+  document.getElementById('oxQ').textContent = S.names[S.turn]+', 범인 맞아?';
+}
+function answerOX(isYes){
+  if(isYes){
+    if(S.culprit===null) S.culprit = S.turn;   // 우리끼리 정하기 모드
+    S.phase='wrong';
+  } else {
+    S.phase='normal';
+  }
+  S.pending=null;
+  openDraw();
+}
+
+/* ── 캔버스 ── */
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+let cur=null, drawingNow=false, locked=false;
+
+function sizeCanvas(c){
+  const dpr=Math.min(window.devicePixelRatio||1,2.5);
+  const r=c.getBoundingClientRect();
+  c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr);
+  return dpr;
+}
+function visibleStrokes(strokes, revealAll){
+  const n=strokes.length, out=[];
+  for(let i=0;i<n;i++){
+    const s=strokes[i];
+    // 엉뚱한 버전: 범인 이후 delay획(1~3, 랜덤)이 더 그어지면 엉뚱한 선으로 바뀜
+    const swapped = s.alt && (revealAll || n >= i + 1 + (s.delay||2));
+    out.push({pts: swapped ? s.alt : s.pts, color:s.color});
+  }
+  return out;
+}
+function paint(c, list, extra){
+  const g=c.getContext('2d');
+  g.setTransform(1,0,0,1,0,0);
+  g.fillStyle='#FFFDF6'; g.fillRect(0,0,c.width,c.height);
+  const w=c.width, h=c.height;
+  const lw=Math.max(3, w*0.011);
+  g.lineCap='round'; g.lineJoin='round'; g.lineWidth=lw;
+  const one=(st)=>{
+    if(!st || st.pts.length<1) return;
+    g.strokeStyle=st.color; g.beginPath();
+    st.pts.forEach((p,i)=> i? g.lineTo(p.x*w,p.y*h) : g.moveTo(p.x*w,p.y*h));
+    if(st.pts.length===1) g.lineTo(st.pts[0].x*w+0.6, st.pts[0].y*h);
+    g.stroke();
+  };
+  list.forEach(one);
+  if(extra) one(extra);
+}
+function redraw(){
+  const R=S.data[S.round];
+  paint(cv, visibleStrokes(R.strokes,false), cur?{pts:cur,color:curColor()}:null);
+}
+function curColor(){
+  return COLORS[S.data[S.round].strokes.length % COLORS.length];
+}
+
+function pos(e){
+  const r=cv.getBoundingClientRect();
+  return {x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),
+          y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))};
+}
+cv.addEventListener('pointerdown',e=>{
+  if(locked || cur) return;
+  drawingNow=true; cur=[pos(e)];
+  cv.setPointerCapture(e.pointerId);
+  document.getElementById('hint').style.display='none';
+  redraw();
+});
+cv.addEventListener('pointermove',e=>{
+  if(!drawingNow) return;
+  const p=pos(e), last=cur[cur.length-1];
+  if(Math.hypot(p.x-last.x,p.y-last.y) < 0.004) return;
+  cur.push(p); redraw();
+});
+function endStroke(){
+  if(!drawingNow) return;
+  drawingNow=false; locked=true;
+  document.getElementById('board').classList.add('locked');
+  document.getElementById('btnDone').disabled=false;
+  document.getElementById('btnUndo').disabled=false;
+}
+cv.addEventListener('pointerup',endStroke);
+cv.addEventListener('pointercancel',endStroke);
+cv.addEventListener('pointerleave',endStroke);
+window.addEventListener('resize',()=>{
+  if(document.getElementById('s-draw').classList.contains('on')){ sizeCanvas(cv); redraw(); }
+});
+
+function undoStroke(){
+  cur=null; locked=false; drawingNow=false;
+  document.getElementById('board').classList.remove('locked');
+  document.getElementById('btnDone').disabled=true;
+  document.getElementById('btnUndo').disabled=true;
+  document.getElementById('hint').style.display='';
+  redraw();
+}
+
+function openDraw(){
+  go('draw');
+  const R=S.data[S.round];
+  document.getElementById('drawRound').textContent=(S.round+1)+'라운드';
+  document.getElementById('drawWho').textContent=S.names[S.turn];
+  document.getElementById('refBox').innerHTML=refHTML(R.pic);
+
+  const dots=document.getElementById('orderDots'); dots.innerHTML='';
+  for(let i=0;i<S.names.length;i++){
+    const d=document.createElement('span');
+    d.className='dot'+(i<S.turn?' done':i===S.turn?' now':'');
+    dots.appendChild(d);
+  }
+  const ins=document.getElementById('instruct');
+  ins.className='instruct';
+  if(S.phase==='wrong'){
+    ins.classList.add('bad');
+    ins.innerHTML = S.version==='twist'
+      ? '엉뚱한 그림을 그리세요.<br><small style="opacity:.8">이 선은 숨겨 뒀다가 나중에 나타나요</small>'
+      : '엉뚱한 그림을 그리세요.<br><small style="opacity:.8">이 선이 그대로 남아요. 살짝만!</small>';
+  }
+  else if(S.phase==='proper'){ ins.classList.add('good'); ins.textContent='제대로 그리세요.'; }
+  else ins.textContent='한 획만 그리세요.';
+
+  const c=curColor();
+  document.getElementById('swatch').style.background=c;
+  document.getElementById('crayonName').textContent=COLOR_NAMES[S.data[S.round].strokes.length % COLORS.length]+' 크레용';
+
+  cur=null; locked=false; drawingNow=false;
+  document.getElementById('board').classList.remove('locked');
+  document.getElementById('btnDone').disabled=true;
+  document.getElementById('btnUndo').disabled=true;
+  document.getElementById('hint').style.display='';
+  requestAnimationFrame(()=>{ sizeCanvas(cv); redraw(); });
+}
+
+function finishStroke(){
+  if(!cur) return;
+  const R=S.data[S.round];
+  const color=curColor();
+  if(S.phase==='wrong' && S.version==='twist'){
+    S.pending = cur;              // 엉뚱한 선은 기억만 해 둔다
+    S.phase='proper';
+    openDraw();                   // 같은 색으로 한 번 더
+    return;
+  }
+  R.strokes.push({
+    pts: cur, color: color, by: S.turn,
+    wrong: (S.phase==='wrong'),                        // 일반 버전: 엉뚱한 선이 그대로 남음
+    alt: (S.phase==='proper' ? S.pending : null),      // 엉뚱한 버전: 나중에 드러날 선
+    delay: (S.phase==='proper' ? 1+Math.floor(Math.random()*3) : 0)
+  });
+  S.pending=null; S.phase='normal'; cur=null;
+
+  S.turn++;
+  if(S.turn >= S.names.length) showReview();
+  else showPass();
+}
+
+/* ── 라운드 확인 ── */
+function showReview(){
+  go('review');
+  const R=S.data[S.round];
+  document.getElementById('reviewEyebrow').textContent=(S.round+1)+'라운드 완성';
+  document.getElementById('reviewRef').innerHTML=refHTML(R.pic,'원래 그리기로 한 그림');
+  const c=document.getElementById('reviewCv');
+  c.style.aspectRatio='4/3';
+  requestAnimationFrame(()=>{
+    sizeCanvas(c);
+    paint(c, visibleStrokes(R.strokes,true));
+  });
+  const b=document.getElementById('btnReviewNext');
+  if(S.round+1 < S.rounds){
+    b.textContent=(S.round+2)+'라운드 시작';
+    b.onclick=()=>{S.round++;S.turn=0;showPass();};
+  } else {
+    b.textContent='범인 확인하기';
+    b.onclick=()=>{S.voter=0;S.votes=[];showVote();};
+  }
+}
+
+/* ── 투표 ── */
+function showVote(){
+  if(S.voter>=S.names.length){ showResult(); return; }
+  go('vote');
+  document.getElementById('voterName').textContent=S.names[S.voter];
+  const box=document.getElementById('voteBtns'); box.innerHTML='';
+  S.names.forEach((nm,i)=>{
+    if(i===S.voter) return;              // 자기 자신은 못 고름
+    const b=document.createElement('button');
+    b.textContent=nm;
+    b.onclick=()=>{S.votes.push(i);S.voter++;showVote();};
+    box.appendChild(b);
+  });
+}
+
+/* ── 결과 ── */
+let showTruth=false;
+function showResult(){
+  go('result');
+  const counts=S.names.map((_,i)=>S.votes.filter(v=>v===i).length);
+  const max=Math.max(...counts);
+  const top=counts.map((c,i)=>c===max?i:-1).filter(i=>i>=0);
+
+  const v=document.getElementById('verdict');
+  const culpritName = S.culprit===null ? '없음' : S.names[S.culprit];
+  let cls, k, msg;
+  if(S.culprit===null){
+    cls=''; k='범인이 없었어요';
+    msg='아무도 O를 누르지 않았네요. 다음 판엔 범인을 꼭 정하고 시작해요.';
+  } else if(top.length>1 && top.includes(S.culprit)){
+    cls='win'; k='아슬아슬 무승부!';
+    msg='표가 갈렸지만 범인 <b>'+culpritName+'</b>도 그중에 있었어요.';
+  } else if(top.length===1 && top[0]===S.culprit){
+    cls='win'; k='범인 검거 성공!';
+    msg='범인은 <b>'+culpritName+'</b>. 모두의 눈이 매서웠어요.';
+  } else {
+    cls='lose'; k='범인 탈출 성공…';
+    msg='진짜 범인은 <b>'+culpritName+'</b>였습니다. 감쪽같았네요.';
+  }
+  v.className='verdict '+cls;
+  v.innerHTML='<div class="k">'+k+'</div><div class="v">'+msg+'</div>';
+
+  const t=document.getElementById('tally'); t.innerHTML='';
+  S.names.forEach((nm,i)=>{
+    const row=document.createElement('div'); row.className='bar';
+    const w = max? (counts[i]/max*100) : 0;
+    row.innerHTML='<span class="nm">'+nm+(i===S.culprit?' 🔍':'')+'</span>'+
+      '<span class="fill'+(counts[i]===max&&max>0?' top':'')+'" style="width:'+Math.max(w,3)+'%"></span>'+
+      '<span>'+counts[i]+'표</span>';
+    t.appendChild(row);
+  });
+
+  showTruth=false;
+  const tb=document.getElementById('btnToggleTruth');
+  tb.style.display = S.data.some(R=>R.strokes.some(s=>s.alt)) ? '' : 'none';
+  tb.textContent='범인이 진짜 그리려던 선 보기';
+  tb.onclick=()=>{
+    showTruth=!showTruth;
+    tb.textContent = showTruth ? '엉뚱한 선이 섞인 그림 보기' : '범인이 진짜 그리려던 선 보기';
+    paintGallery();
+  };
+  paintGallery();
+}
+function paintGallery(){
+  const g=document.getElementById('resultGallery'); g.innerHTML='';
+  S.data.forEach((R,i)=>{
+    const f=document.createElement('div'); f.className='frame';
+    const c=document.createElement('canvas'); c.style.aspectRatio='4/3'; c.style.width='100%';
+    f.appendChild(c);
+    const cap=document.createElement('p'); cap.className='cap';
+    cap.textContent=(i+1)+'라운드 · '+R.pic.n+(showTruth?' (범인이 숨긴 바른 선)':' (엉뚱한 선 포함)');
+    g.appendChild(f); g.appendChild(cap);
+    requestAnimationFrame(()=>{
+      sizeCanvas(c);
+      const list = showTruth
+        ? R.strokes.map(s=>({pts:s.pts,color:s.color}))
+        : visibleStrokes(R.strokes,true);
+      paint(c,list);
+    });
+  });
+}
+
+</script>
+</body>
+</html>

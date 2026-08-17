@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0E1330">
+<title>릴레이 그림 그리기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E1330; --ink-2:#171E45; --paper:#FFFDF6; --chalk:#E8EBFF; --dim:#8E97C7;
+  --yellow:#FFD84D; --mint:#4DE1C1; --coral:#FF6B6B; --line:rgba(232,235,255,.16); --r:22px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:radial-gradient(120% 80% at 50% -10%, #1E2760 0%, transparent 60%), var(--ink);
+  color:var(--chalk);
+  font-family:'Jua',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  overscroll-behavior:none;-webkit-user-select:none;user-select:none;
+}
+#app{min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  padding:max(14px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom))}
+.screen{display:none;width:100%;max-width:720px;margin:auto;animation:in .26s ease}
+.screen.on{display:flex;flex-direction:column;gap:14px}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.screen{animation:none}}
+
+#homeBtn{position:fixed;top:max(10px,env(safe-area-inset-top));left:10px;z-index:50;display:none;
+  width:46px;height:46px;border-radius:16px;background:var(--ink-2);border:1px solid var(--line);
+  font-size:20px;line-height:1;color:var(--chalk)}
+#homeBtn:active{transform:scale(.94)}
+#homeBtn.on{display:block}
+
+.logo{display:block;width:min(64vw,300px);margin:0 auto}
+.logo path{fill:none;stroke-linecap:round;stroke-width:7;stroke-dasharray:var(--l);stroke-dashoffset:var(--l);
+  animation:trace 1.5s ease forwards}
+.logo path:nth-child(1){stroke:var(--coral)}
+.logo path:nth-child(2){stroke:var(--yellow);animation-delay:.35s}
+.logo path:nth-child(3){stroke:var(--mint);animation-delay:.7s}
+.logo circle{fill:var(--chalk);opacity:0;animation:pop .3s ease forwards}
+.logo circle:nth-of-type(1){animation-delay:.35s}
+.logo circle:nth-of-type(2){animation-delay:.7s}
+@keyframes trace{to{stroke-dashoffset:0}}
+@keyframes pop{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.logo path{animation:none;stroke-dashoffset:0}.logo circle{animation:none;opacity:1}}
+
+.no{display:block;text-align:center;font-family:'Gaegu',cursive;font-size:22px;color:var(--dim);letter-spacing:4px;margin:0}
+h1{font-family:'Gaegu',cursive;font-size:clamp(38px,10.5vw,68px);line-height:1;margin:0;text-align:center}
+h1 em{font-style:normal;color:var(--yellow)}
+h2{font-family:'Gaegu',cursive;font-size:clamp(27px,7vw,40px);margin:0;text-align:center;line-height:1.15}
+.sub{text-align:center;color:var(--dim);font-size:clamp(14px,3.6vw,17px);line-height:1.6;margin:0}
+.eyebrow{font-size:13px;letter-spacing:3px;color:var(--yellow);text-align:center;margin:0}
+.card{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card h3{margin:0 0 10px;font-size:15px;color:var(--dim);font-weight:400;text-align:center}
+.card p.rule{margin:0;line-height:1.95;font-size:16px}
+.card p.rule b{color:var(--yellow)}
+
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.btn{width:100%;padding:18px;border-radius:18px;font-size:clamp(19px,5vw,24px);
+  background:var(--yellow);color:#241A00;box-shadow:0 5px 0 #C9A417;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #C9A417}
+.btn.ghost{background:transparent;color:var(--chalk);border:2px solid var(--line);box-shadow:none}
+.btn.mint{background:var(--mint);color:#00312A;box-shadow:0 5px 0 #2AA98F}
+.btn.mint:active{box-shadow:0 1px 0 #2AA98F}
+.btn.coral{background:var(--coral);color:#3A0000;box-shadow:0 5px 0 #C24A4A}
+.btn.coral:active{box-shadow:0 1px 0 #C24A4A}
+.row{display:flex;gap:10px}.row>*{flex:1}
+
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chip{padding:15px 0;border-radius:14px;border:2px solid var(--line);font-size:20px;text-align:center}
+.chip.sel{background:var(--mint);color:#00312A;border-color:var(--mint)}
+.toggle{display:flex;gap:8px}
+.toggle button{flex:1;padding:13px;border-radius:14px;border:2px solid var(--line);font-size:16px;line-height:1.4}
+.toggle button.sel{background:var(--yellow);color:#241A00;border-color:var(--yellow)}
+.tname{width:100%;padding:14px;border-radius:14px;border:2px solid var(--line);background:#0B1030;
+  color:var(--chalk);font-family:inherit;font-size:19px;text-align:center}
+.tname:focus{outline:none;border-color:var(--yellow)}
+
+.numgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:7px;
+  max-height:50dvh;overflow-y:auto;padding:4px;-webkit-overflow-scrolling:touch}
+.num{aspect-ratio:1;border-radius:13px;border:2px solid var(--line);background:var(--ink-2);
+  font-size:17px;display:flex;align-items:center;justify-content:center}
+.num:active{background:var(--yellow);color:#241A00}
+.num.used{opacity:.35;border-style:dashed}
+
+.ref{display:flex;gap:12px;align-items:center;background:var(--paper);border-radius:16px;padding:10px 14px}
+.ref svg{width:clamp(58px,16vw,84px);height:clamp(58px,16vw,84px);flex:none}
+.ref .meta{color:#3A4166;line-height:1.35}
+.ref .meta b{display:block;font-size:clamp(19px,5vw,25px);color:#0E1330}
+.ref .meta span{font-size:12px}
+.bigref{background:var(--paper);border-radius:20px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.bigref svg{width:min(56vw,250px);height:min(56vw,250px)}
+.bigref b{color:#0E1330;font-size:clamp(23px,6vw,31px);font-family:'Gaegu',cursive}
+.bigref span{color:#5A6187;font-size:13px}
+.word{font-family:'Gaegu',cursive;color:#0E1330;font-size:clamp(52px,15vw,96px);line-height:1.1;
+  padding:18px 4px;text-align:center}
+
+.timerwrap{background:var(--ink-2);border:1px solid var(--line);border-radius:20px;padding:14px 10px}
+.timer{text-align:center;font-family:'Gaegu',cursive;font-size:clamp(52px,15vw,96px);line-height:1;
+  color:var(--yellow);min-height:1em}
+.timer.hidden-mode{color:var(--dim);font-size:clamp(30px,8vw,46px)}
+.timerwrap small{display:block;text-align:center;color:var(--dim);font-size:13px;margin-top:4px}
+.turnbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pill{background:var(--ink-2);border:1px solid var(--line);padding:7px 13px;border-radius:99px;font-size:14px;white-space:nowrap}
+.pill.now{background:var(--yellow);color:#241A00;border-color:var(--yellow)}
+
+.board{position:relative;width:100%;aspect-ratio:4/3;background:var(--paper);border-radius:16px;overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.board canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+.board .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#B9BFD6;font-size:clamp(15px,4vw,19px);pointer-events:none;text-align:center;padding:20px}
+.crayon{display:flex;align-items:center;gap:9px;justify-content:center;color:var(--dim);font-size:14px}
+.swatch{width:26px;height:26px;border-radius:8px;border:2px solid rgba(255,255,255,.5)}
+
+.drum{text-align:center;font-family:'Gaegu',cursive;font-size:clamp(34px,9vw,52px);padding:30px 0}
+.drum span{display:inline-block;animation:bump .5s infinite}
+.drum span:nth-child(2){animation-delay:.12s}.drum span:nth-child(3){animation-delay:.24s}
+@keyframes bump{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.final{text-align:center;font-family:'Gaegu',cursive;color:var(--yellow);
+  font-size:clamp(56px,16vw,110px);line-height:1;transform:scale(.2);opacity:0}
+.final.pop{animation:boom .6s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes boom{to{transform:scale(1);opacity:1}}
+.calc{text-align:center;color:var(--dim);font-size:15px;line-height:1.7}
+.calc b{color:var(--chalk)}
+.stepper{display:flex;align-items:center;justify-content:center;gap:14px}
+.stepper button{width:56px;height:56px;border-radius:18px;border:2px solid var(--line);font-size:26px}
+.stepper button:active{background:var(--coral);color:#3A0000}
+.stepper .val{font-family:'Gaegu',cursive;font-size:40px;min-width:2.4em;text-align:center;color:var(--coral)}
+.rank{display:flex;flex-direction:column;gap:8px}
+.rank .r{display:flex;justify-content:space-between;align-items:center;background:var(--ink-2);
+  border:1px solid var(--line);border-radius:14px;padding:11px 15px;font-size:15px;gap:10px}
+.rank .r b{color:var(--yellow);font-family:'Gaegu',cursive;font-size:22px;white-space:nowrap}
+.frame{background:var(--paper);border-radius:16px;padding:8px}
+.frame canvas{width:100%;display:block;border-radius:10px}
+footer{margin-top:14px;color:#4C5488;font-size:12px;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<button id="homeBtn" onclick="goHome()">🏠</button>
+<div id="app">
+
+<!-- 홈 -->
+<section class="screen on" id="s-home">
+  <svg class="logo" viewBox="0 0 300 90" aria-hidden="true">
+    <path d="M14 62c14-30 34-30 46 0" style="--l:110"/>
+    <path d="M110 62c14-30 34-30 46 0" style="--l:110"/>
+    <path d="M206 62c14-30 34-30 46 0" style="--l:110"/>
+    <circle cx="83" cy="62" r="7"/><circle cx="179" cy="62" r="7"/>
+  </svg>
+  <p class="no">0 1</p>
+  <h1>릴레이 <em>그림 그리기</em></h1>
+  <p class="sub">모둠마다 기기 1대. 돌아가며 <b>한 사람이 한 획</b>씩.<br>제일 빨리 그린 모둠이 승리!</p>
+  <div class="card">
+    <h3>모둠 이름</h3>
+    <input class="tname" id="teamName" maxlength="10" placeholder="예) 1모둠 · 무지개팀">
+  </div>
+  <div class="card">
+    <h3>모둠 인원</h3>
+    <div class="chips" id="memberChips"></div>
+  </div>
+  <div class="card">
+    <h3>무엇을 보고 그릴까요?</h3>
+    <div class="toggle" id="verToggle">
+      <button data-v="pic" class="sel">그림 버전<br><small style="opacity:.7">그림을 보고 똑같이</small></button>
+      <button data-v="word">낱말 버전<br><small style="opacity:.7">낱말만 보고 상상해서</small></button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>그리는 동안 시간</h3>
+    <div class="toggle" id="hideToggle">
+      <button data-h="1" class="sel">3획째부터 가리기</button>
+      <button data-h="0">계속 보이기</button>
+    </div>
+  </div>
+  <button class="btn" onclick="startGame()">시작하기</button>
+  <button class="btn ghost" onclick="go('how')">놀이 방법</button>
+  <footer>스마트폰 · 태블릿 · PC 모두 사용할 수 있어요</footer>
+</section>
+
+<!-- 놀이 방법 -->
+<section class="screen" id="s-how">
+  <h2>놀이 방법</h2>
+  <div class="card">
+    <p class="rule">
+      1. 모든 모둠이 <b>같은 그림 번호(1~100)</b>를 누른다.<br>
+      2. 모둠원끼리 그릴 순서를 정한 뒤에 시작 버튼을 누른다.<br>
+      3. 제시된 그림과 똑같이 그린다. 단, <b>모둠원마다 한 획</b>을 그린다.<br>
+      4. 다 그리면 종료 버튼을 누른다.<br>
+      5. 만든 시간이 나오면 그림을 비교한다.<br>
+      6. 너무 엉성하게 그린 그림에는 교사가 <b>획마다 마이너스 점수</b>를 넣는다.<br>
+      7. 최종 시간을 비교하여 <b>가장 적게 걸린 모둠</b>이 승리한다.
+    </p>
+  </div>
+  <div class="card">
+    <h3>더 재미있어요</h3>
+    <p class="rule">
+      <b>엉뚱한 버전</b> — 그림을 제시하는 대신 <b>낱말</b>을 제시하고 그림을 그린다.
+      시간을 가장 빨리한 팀과 <b>표현을 가장 잘한 팀</b>을 교사가 선정한다.
+      <br><small style="color:var(--dim)">첫 화면에서 '낱말 버전'을 고르면 됩니다.</small>
+    </p>
+  </div>
+  <button class="btn ghost" onclick="go('home')">돌아가기</button>
+</section>
+
+<!-- 번호 고르기 -->
+<section class="screen" id="s-pick">
+  <p class="eyebrow" id="pickRound">1라운드</p>
+  <h2 id="pickTitle">그림 번호를 눌러요</h2>
+  <p class="sub">모든 모둠이 <b>같은 번호</b>를 눌러야 해요.<br>선생님이 부르는 번호를 함께 누르세요.</p>
+  <div class="numgrid" id="numGrid"></div>
+  <button class="btn ghost" onclick="pickRandom()">🎲 아무거나 뽑기</button>
+</section>
+
+<!-- 준비 -->
+<section class="screen" id="s-ready">
+  <p class="eyebrow" id="readyRound">1라운드</p>
+  <div class="bigref" id="readyRef"></div>
+  <p class="sub" id="readyTip"></p>
+  <button class="btn mint" onclick="beginRound()">시작</button>
+  <button class="btn ghost" onclick="showPick()">번호 다시 고르기</button>
+</section>
+
+<!-- 그리기 -->
+<section class="screen" id="s-draw">
+  <div class="timerwrap">
+    <div class="timer" id="timer">0.0</div>
+    <small id="timerNote"></small>
+  </div>
+  <div class="turnbar">
+    <span class="pill now" id="turnWho">1번 차례</span>
+    <span class="pill" id="turnCount">1획째</span>
+  </div>
+  <div class="ref" id="drawRef"></div>
+  <div class="board" id="board">
+    <canvas id="cv"></canvas>
+    <div class="hint" id="hint">한 획만 쓱— 그리고 다음 사람에게 넘겨요</div>
+  </div>
+  <div class="crayon"><span class="swatch" id="swatch"></span><span id="crayonName">크레용</span></div>
+  <div class="row">
+    <button class="btn ghost" onclick="undoStroke()">방금 획 지우기</button>
+    <button class="btn coral" onclick="endRound()">종료</button>
+  </div>
+</section>
+
+<!-- 결과 -->
+<section class="screen" id="s-result">
+  <p class="eyebrow" id="resRound">1라운드 기록</p>
+  <div class="drum" id="drum"><span>두</span><span>구</span><span>두</span><span>구</span><span>…</span></div>
+  <div id="resBody" style="display:none">
+    <div class="final" id="finalTime">0.0초</div>
+    <p class="calc" id="calcLine"></p>
+    <div class="frame" style="margin-top:12px"><canvas id="resCv"></canvas></div>
+    <div class="card" style="margin-top:14px">
+      <h3>선생님 채점 · 엉성한 획</h3>
+      <div class="stepper">
+        <button onclick="addBad(-1)">−</button>
+        <span class="val" id="badVal">0</span>
+        <button onclick="addBad(1)">＋</button>
+      </div>
+      <p class="sub" style="margin-top:10px">획 1개당 벌점</p>
+      <div class="chips" id="penChips" style="grid-template-columns:repeat(4,1fr);margin-top:8px"></div>
+    </div>
+    <div class="rank" id="rankList" style="margin-top:14px"></div>
+    <button class="btn" style="margin-top:14px" onclick="nextRound()">다음 라운드</button>
+    <button class="btn ghost" style="margin-top:10px" onclick="goHome()">처음으로</button>
+  </div>
+</section>
+
+</div>
+<script>
+const PICS = [
+{n:'집',c:[[56,76,2]],p:['M8,50 50,18 92,50','M20,44V88H80V44','M42,88V64H58V88','M26,52H38V64H26Z','M62,52H74V64H62Z','M66,30V14H76V38']},
+{n:'나무',c:[[50,36,24],[38,30,4],[60,42,4]],p:['M50,88V54','M50,66 38,56','M50,72 62,62','M16,88H84']},
+{n:'꽃',c:[[50,46,8],[50,24,13],[72,46,13],[50,68,13],[28,46,13]],p:['M50,80V94','M50,86 Q36,82 32,90']},
+{n:'해',c:[[50,50,20]],p:['M50,22V8','M50,78V92','M22,50H8','M78,50H92','M64,36 74,26','M36,64 26,74','M64,64 74,74','M36,36 26,26']},
+{n:'달과 별',p:['M64,20 A32,32 0 1,0 64,84 A25,25 0 1,1 64,20Z','M14,26V44','M5,35H23','M84,52V70','M75,61H93','M28,74V88','M21,81H35']},
+{n:'별',p:['M50,10 61,38 91,38 67,56 76,86 50,68 24,86 33,56 9,38 39,38Z','M12,16 22,26','M88,16 78,26','M14,90 22,82','M86,90 78,82','M50,96V88']},
+{n:'비구름',p:['M26,60 A15,15 0 0,1 28,30 A21,21 0 0,1 68,26 A17,17 0 0,1 74,60Z','M28,68 22,86','M44,68 38,86','M60,68 54,86','M74,66 68,84','M14,66 10,80']},
+{n:'우산',p:['M8,54 A42,42 0 0,1 92,54','M8,54 Q20,46 30,54 Q40,46 50,54 Q60,46 70,54 Q80,46 92,54','M50,54V80 Q50,90 62,90 Q70,90 70,82','M50,54V12','M18,22 14,34','M40,14 36,26','M66,14 62,26','M86,24 82,36']},
+{n:'물고기',c:[[30,44,2.5],[82,16,4],[92,28,3]],p:['M18,50 Q44,24 70,50 Q44,76 18,50Z','M70,50 92,32V68Z','M40,32 Q50,22 60,34','M40,68 Q50,78 60,66','M38,38 Q34,50 38,62','M24,52 Q30,56 36,52']},
+{n:'고양이',c:[[50,55,28],[38,48,3],[62,48,3]],p:['M28,38 24,14 46,28','M72,38 76,14 54,28','M50,56 46,61 54,61Z','M50,61V67','M22,52 6,48','M22,60 6,64','M78,52 94,48','M78,60 94,64']},
+{n:'강아지',c:[[50,54,24],[41,50,3],[59,50,3],[50,64,4]],p:['M30,36 Q10,46 14,68 Q18,80 32,72','M70,36 Q90,46 86,68 Q82,80 68,72','M50,68V74','M40,78 Q50,85 60,78']},
+{n:'토끼',c:[[50,62,24],[42,58,3],[58,58,3]],p:['M40,40 Q34,10 44,12 Q50,20 48,42','M60,40 Q66,10 56,12 Q50,20 52,42','M50,68 46,73 54,73Z']},
+{n:'곰',c:[[50,58,26],[28,32,10],[72,32,10],[40,52,3],[60,52,3],[50,68,7]],p:['M50,62V70']},
+{n:'돼지',c:[[50,55,27],[50,64,10],[46,64,2],[54,64,2],[40,46,3],[60,46,3]],p:['M28,32 24,18 40,26','M72,32 76,18 60,26']},
+{n:'병아리',c:[[50,54,24],[42,48,3]],p:['M26,54 12,60 26,64','M42,78 40,92','M58,78 60,92','M52,52 Q62,60 52,68','M36,92H46','M56,92H66']},
+{n:'새',c:[[36,38,14],[32,34,2.5]],p:['M46,44 Q78,44 86,66 Q60,82 44,64','M22,38 8,44 22,48','M54,76V86','M66,74V86','M48,88H60','M60,88H72']},
+{n:'나비',c:[[31,38,16],[69,38,16],[34,68,12],[66,68,12]],p:['M50,24V80','M48,24 38,10','M52,24 62,10']},
+{n:'벌',c:[[26,52,10],[22,49,2]],p:['M36,52 Q36,34 58,34 Q84,34 84,52 Q84,70 58,70 Q36,70 36,52Z','M50,36V68','M66,35V69','M84,52 96,46','M84,58 96,64','M52,34 Q48,14 64,16 Q70,24 62,34','M66,34 Q78,18 90,26 Q88,34 76,36']},
+{n:'달팽이',c:[[58,58,20],[58,58,10]],p:['M38,74H18 Q10,74 12,62','M14,60 10,48','M20,58 22,46','M6,86H94','M84,72 Q88,60 92,74','M76,74 Q80,66 84,76']},
+{n:'거북이',c:[[88,54,8],[90,51,1.8]],p:['M14,68 Q14,34 48,34 Q80,34 80,68Z','M14,68H80','M47,34V68','M30,38 28,68','M64,38 66,68','M22,68V80','M40,68V78','M56,68V78','M74,68V80']},
+{n:'문어',c:[[50,40,24],[42,36,3],[58,36,3]],p:['M28,56 Q22,80 12,86','M40,62 Q36,84 30,90','M60,62 Q64,84 70,90','M72,56 Q78,80 88,86']},
+{n:'게',c:[[50,58,22],[42,52,3],[58,52,3]],p:['M28,48 Q14,38 20,26 Q28,34 26,42','M72,48 Q86,38 80,26 Q72,34 74,42','M30,74 24,86','M44,80 40,92','M56,80 60,92','M70,74 76,86']},
+{n:'상어',c:[[30,52,2.5]],p:['M12,58 Q40,36 84,52 Q60,74 12,58Z','M50,41 56,18 66,45','M84,52 92,38 94,64Z','M36,62 Q46,74 56,64','M40,46 Q42,54 40,62','M46,44 Q48,54 46,62','M20,54 Q26,58 32,58']},
+{n:'고래',c:[[30,50,2.5]],p:['M14,58 Q40,30 70,54 Q44,80 14,58Z','M70,54 90,40V70Z','M40,32 Q38,18 46,12','M40,32 Q46,20 56,18','M16,62 Q34,72 52,66','M20,68 Q34,76 46,72','M14,58 Q22,52 32,52']},
+{n:'코끼리',c:[[52,44,22],[44,40,3],[60,40,3]],p:['M30,30 Q8,28 10,50 Q12,66 32,60','M74,30 Q96,28 94,50 Q92,66 72,60','M44,62 Q40,86 52,88 Q62,88 60,76']},
+{n:'기린',c:[[62,24,2]],p:['M38,88V56 Q38,44 50,40','M50,40V20','M48,20 Q64,14 68,24 Q68,32 58,32','M58,88V60','M52,20 50,12','M60,22 62,12']},
+{n:'사자',c:[[50,52,30],[50,52,19],[43,48,3],[57,48,3]],p:['M50,56 46,60 54,60Z','M50,60V66','M32,60 18,56','M32,66 18,70','M68,60 82,56','M68,66 82,70']},
+{n:'원숭이',c:[[50,50,22],[26,48,9],[74,48,9],[50,58,14],[42,44,3],[58,44,3]],p:['M50,58V62','M44,66 Q50,71 56,66']},
+{n:'개구리',c:[[38,32,10],[62,32,10],[38,32,3],[62,32,3],[50,56,24]],p:['M32,64 Q50,76 68,64','M28,74 20,88','M72,74 80,88']},
+{n:'뱀',c:[[66,14,2]],p:['M14,80 Q40,80 40,62 Q40,44 60,44 Q80,44 80,28 Q80,16 62,16','M62,16 52,10','M62,16 52,22','M24,74 30,84','M40,54 48,60','M64,36 72,44','M76,22 84,28']},
+{n:'자동차',c:[[28,70,8],[72,70,8]],p:['M8,66V50H28L38,34H68L78,50H92V66Z','M38,34V50','M60,34V50','M52,50V66','M88,54H94','M8,54H4']},
+{n:'버스',c:[[28,74,7],[72,74,7]],p:['M10,26H90V70H10Z','M18,34H42V50H18Z','M50,34H82V50H50Z','M10,58H90']},
+{n:'트럭',c:[[24,72,7],[70,72,7]],p:['M8,40H52V68H8Z','M52,48H72L84,60V68H52Z','M14,46H44V58H14Z','M56,52H70L78,60H56Z','M8,60H52','M84,62H90']},
+{n:'자전거',c:[[24,64,18],[76,64,18]],p:['M24,64 44,34 76,64','M44,34H62','M44,34 50,64','M62,34 68,28','M36,30H54']},
+{n:'기차',c:[[22,72,6],[48,72,6],[74,72,6]],p:['M8,66V34H40V66Z','M40,66V46H86V66Z','M16,40H32V52H16Z','M22,34V20H32V34']},
+{n:'배',p:['M12,66H88L76,84H24Z','M50,66V12','M50,18 82,52H50','M50,24 22,52H50','M6,88 Q20,80 34,88 Q48,80 62,88 Q76,80 94,88','M50,12 66,16 50,22']},
+{n:'비행기',c:[[52,50,4],[64,50,4],[76,50,4]],p:['M14,52 Q30,40 62,40 Q84,40 92,52 Q84,64 62,64 Q30,64 14,52Z','M40,42 30,18H40L60,40','M40,62 30,86H40L60,64','M14,52 2,44','M14,52 2,60','M84,44 Q90,52 84,60']},
+{n:'로켓',c:[[50,38,8]],p:['M50,8 Q70,32 70,60H30 Q30,32 50,8Z','M30,50 16,74 30,64','M70,50 84,74 70,64','M42,72H58L54,88H46Z','M38,60H62','M12,20V32','M6,26H18']},
+{n:'헬리콥터',c:[[36,58,8]],p:['M14,60 Q14,42 40,42H62 Q80,46 88,60 Q80,72 60,72H30 Q14,72 14,60Z','M62,46 88,22','M50,32V42','M14,32H86','M26,74V84H74']},
+{n:'열기구',c:[[50,38,28]],p:['M34,58 42,78','M66,58 58,78','M50,66V78','M40,78H60L58,92H42Z','M50,10 Q34,30 50,66','M50,10 Q66,30 50,66','M44,84H56']},
+{n:'사과',p:['M50,30 Q22,26 22,54 Q22,86 50,86 Q78,86 78,54 Q78,26 50,30Z','M50,30V14','M50,18 Q66,10 72,20 Q62,26 50,20','M56,18 66,18','M34,42 Q30,54 34,64','M62,34 Q70,40 70,48']},
+{n:'바나나',p:['M14,30 Q18,70 58,78 Q84,80 88,58 Q68,66 50,52 Q34,40 30,26Z','M22,28 Q26,64 60,72','M14,30 20,18','M30,26 34,16','M88,58 94,50','M56,74 62,66']},
+{n:'수박',c:[[38,58,2.5],[56,54,2.5],[50,70,2.5],[68,50,2.5]],p:['M12,40 A38,38 0 0,0 88,40Z','M12,40H88','M12,48 A32,32 0 0,0 88,48']},
+{n:'딸기',c:[[40,50,2],[58,50,2],[50,62,2],[36,66,2],[62,66,2]],p:['M50,88 Q18,66 24,42 Q30,26 50,32 Q70,26 76,42 Q82,66 50,88Z','M42,26 50,32 58,26','M50,32V22']},
+{n:'포도',c:[[50,30,10],[36,44,10],[64,44,10],[50,50,10],[42,64,10],[58,64,10],[50,78,10]],p:['M50,20V8','M50,12 Q66,6 72,16']},
+{n:'당근',p:['M50,90 Q28,52 34,40 Q50,34 62,40 Q66,54 50,90Z','M42,52 56,58','M46,68 58,72','M42,36 32,18','M56,36 68,18','M50,34 50,14','M38,44 30,32']},
+{n:'아이스크림',c:[[38,34,12],[62,34,12],[50,28,13]],p:['M32,44H68L50,90Z','M36,54H64','M28,44 A22,22 0 0,1 72,44']},
+{n:'케이크',p:['M18,52H82V84H18Z','M18,64H82','M8,88H92','M34,52V42','M50,52V38','M66,52V42','M34,38 Q30,32 34,26 Q38,32 34,38','M50,34 Q46,28 50,22 Q54,28 50,34','M66,38 Q62,32 66,26 Q70,32 66,38']},
+{n:'도넛',c:[[50,50,32],[50,50,12]],p:['M30,28 24,22','M70,28 76,22','M50,18V10','M26,60 18,64','M74,60 82,64','M50,82V90']},
+{n:'피자',c:[[42,56,4],[60,60,4],[50,72,4],[36,72,3]],p:['M50,12 88,80H12Z','M12,80H88','M20,70H80']},
+{n:'햄버거',c:[[34,38,2],[50,34,2],[66,38,2]],p:['M14,46 A36,24 0 0,1 86,46','M12,52H88','M14,60H86','M12,68 Q50,86 88,68']},
+{n:'핫도그',c:[[36,46,1.6],[52,44,1.6],[68,46,1.6]],p:['M10,64 Q10,42 34,42H68 Q92,42 92,62 Q92,78 68,78H32 Q10,78 10,64Z','M20,60 Q22,50 34,50H68 Q80,50 82,60 Q80,70 68,70H34 Q22,70 20,60Z','M26,58 Q36,50 46,58 Q56,66 66,58 Q74,52 80,58','M14,70 Q50,84 88,70']},
+{n:'사탕',c:[[50,50,20]],p:['M30,50 12,36V64Z','M70,50 88,36V64Z','M42,42 Q50,50 42,58','M52,42 Q60,50 52,58','M20,44 24,50 20,56','M80,44 76,50 80,56']},
+{n:'컵케이크',c:[[50,12,5]],p:['M26,48H74L66,88H34Z','M38,48 34,88','M50,48V88','M62,48 66,88','M26,48 Q20,28 40,30 Q46,16 60,26 Q80,26 74,48','M50,17V28','M30,68H70']},
+{n:'우유팩',c:[[50,60,7]],p:['M28,36H72V88H28Z','M28,36 50,16 72,36','M50,16V36','M36,46H64','M62,30 76,10','M72,8 80,14']},
+{n:'커피잔',p:['M22,36H72V70 Q72,82 58,82H36 Q22,82 22,70Z','M72,44H84 Q92,52 84,62H72','M34,28V14','M50,28V12','M66,28V14','M14,86H84','M22,44H72']},
+{n:'주전자',p:['M26,50H74V78 Q74,86 66,86H34 Q26,86 26,78Z','M26,58 12,50 12,66','M74,58 86,52','M40,50 Q50,38 60,50','M50,38V30','M42,30H58']},
+{n:'숟가락과 포크',p:['M26,14 Q40,14 40,32 Q40,48 26,48 Q12,48 12,32 Q12,14 26,14Z','M26,48V90','M58,12V38 Q58,48 70,48 Q82,48 82,38V12','M66,12V36','M74,12V36','M70,48V90','M18,62H34']},
+{n:'포크',p:['M34,12V40 Q34,52 50,52 Q66,52 66,40V12','M42,12V38','M58,12V38','M50,52V90','M42,64H58','M42,72H58']},
+{n:'접시와 수저',c:[[54,50,28],[54,50,19]],p:['M14,30V50 Q14,58 20,58','M10,30V44','M18,30V44','M20,58V84','M92,30 Q86,38 86,52H92V84','M46,44 Q54,54 62,44']},
+{n:'시계',c:[[50,52,34]],p:['M50,52V30','M50,52 68,62','M50,18V24','M84,52H78','M50,86V80','M16,52H22']},
+{n:'안경',c:[[28,52,18],[72,52,18]],p:['M46,50H54','M10,44 4,32','M90,44 96,32','M20,44 26,40','M64,44 70,40']},
+{n:'모자',c:[[50,26,3]],p:['M20,60 Q20,26 50,26 Q80,26 80,60','M12,60H88 Q88,70 50,70 Q12,70 12,60Z','M50,29V60','M34,30 Q38,56 36,62','M66,30 Q62,56 64,62','M46,16H54V26']},
+{n:'신발',c:[[30,50,1.6],[38,55,1.6]],p:['M16,76V44 Q16,38 24,40L34,50 Q54,58 84,62 Q92,64 92,76Z','M16,70H92','M26,52 34,44','M36,58 44,50','M46,62 54,54','M56,64 64,58']},
+{n:'양말',p:['M32,10H62V50 Q62,60 74,68 Q86,76 80,86 Q74,94 62,88L38,72 Q30,66 30,54V10Z','M30,22H62','M30,30H62','M30,38H62','M42,66 Q50,58 58,64','M34,58 Q42,50 48,56']},
+{n:'티셔츠',p:['M30,20 12,34 24,48 30,42V86H70V42L76,48 88,34 70,20Z','M30,20 Q50,32 70,20','M30,42 24,48','M70,42 76,48','M30,78H70','M56,52H70V66H56Z']},
+{n:'바지',p:['M28,14H72V90H54L50,50 46,90H28Z','M28,26H72','M36,14V26','M64,14V26','M30,32 Q38,42 42,32','M70,32 Q62,42 58,32']},
+{n:'가방',c:[[50,60,4]],p:['M18,40H82V86H18Z','M36,40V28 Q36,16 50,16 Q64,16 64,28V40','M18,54H82','M50,58V68','M28,86V92','M72,86V92']},
+{n:'장화',p:['M28,10H58V50 Q58,58 68,62L82,68 Q90,72 90,82V88H28Z','M28,70H90','M28,20H58','M34,30 Q42,26 50,30','M36,78H62','M70,76H86']},
+{n:'열쇠',c:[[26,40,16],[26,40,6]],p:['M38,50 78,86','M62,66 70,58','M70,74 78,66','M54,58 60,52']},
+{n:'자물쇠',c:[[50,62,6]],p:['M22,44H78V88H22Z','M34,44V30 Q34,14 50,14 Q66,14 66,30V44','M50,68V78','M22,54H78','M22,78H78','M70,58V72']},
+{n:'연필',p:['M14,86 22,62 74,12 88,26 38,78Z','M22,62 38,78','M68,18 82,32','M14,86 26,80','M28,66 44,82','M76,10 92,24']},
+{n:'지우개',p:['M20,54 36,36H84L68,54Z','M20,54H68V78H20Z','M68,54 84,36V60L68,78Z','M20,66H68','M68,66 84,48','M30,72H58']},
+{n:'가위',c:[[30,78,10],[62,78,10]],p:['M36,70 78,14','M56,70 18,14','M46,52 42,46','M24,10 30,18','M62,10 68,18']},
+{n:'자',p:['M10,42H90V64H10Z','M22,42V52','M34,42V56','M46,42V52','M58,42V56','M70,42V52','M82,42V56']},
+{n:'책',p:['M50,26 Q34,16 12,20V76 Q34,72 50,82 Q66,72 88,76V20 Q66,16 50,26Z','M50,26V82','M20,34 Q32,32 44,38','M20,48 Q32,46 44,52','M56,38 Q68,32 80,34','M56,52 Q68,46 80,48']},
+{n:'공책',p:['M24,12H80V88H24Z','M32,12V88','M40,26H70','M40,40H70','M40,54H70','M40,68H62']},
+{n:'컴퓨터',p:['M16,20H84V64H16Z','M24,28H76V56H24Z','M40,64 36,78H64L60,64','M28,84H72','M32,36H50','M32,44H60']},
+{n:'휴대폰',c:[[50,86,3],[50,14,2]],p:['M30,6H70V94H30Z','M30,22H70','M30,78H70','M38,32H62V50H38Z','M38,58H62']},
+{n:'텔레비전',p:['M12,26H88V74H12Z','M22,34H78V66H22Z','M34,74 28,88','M66,74 72,88','M50,26 38,10','M50,26 62,10']},
+{n:'카메라',c:[[50,56,18],[50,56,9],[78,42,3]],p:['M10,32H90V80H10Z','M34,32 40,20H60L66,32','M18,40H28','M10,68H90']},
+{n:'전구',c:[[50,42,24]],p:['M38,62H62','M38,70H62','M40,78H60','M42,86H58','M38,62 Q34,54 34,44','M62,62 Q66,54 66,44']},
+{n:'촛불',p:['M34,42H66V88H34Z','M50,42V32','M50,8 Q62,24 50,32 Q38,24 50,8Z','M34,54H66','M28,88H72','M40,42 Q38,54 42,58']},
+{n:'선물상자',p:['M12,38H88V88H12Z','M50,38V88','M12,52H88','M50,38 Q30,38 30,24 Q30,14 42,18 Q50,24 50,38','M50,38 Q70,38 70,24 Q70,14 58,18 Q50,24 50,38','M20,52V88']},
+{n:'풍선',c:[[26,28,16],[52,20,16],[76,32,16]],p:['M26,44 Q34,70 52,88','M52,36 Q52,64 52,88','M76,48 Q66,70 52,88']},
+{n:'하트와 화살',p:['M50,84 Q16,58 20,38 Q24,20 38,22 Q48,24 50,36 Q52,24 62,22 Q76,20 80,38 Q84,58 50,84Z','M8,74 32,52','M68,34 92,10','M92,10 80,12','M92,10 90,22','M8,74 10,62','M8,74 20,72']},
+{n:'왕관',c:[[50,30,4],[26,60,4],[74,60,4],[50,58,4]],p:['M14,74H86L82,26 62,48 50,20 38,48 18,26Z','M14,74V86H86V74','M14,80H86']},
+{n:'반지',c:[[50,62,24],[50,62,17]],p:['M50,38 36,20H64Z','M50,38 44,26','M50,38 56,26','M36,20H64']},
+{n:'유령',c:[[40,44,4],[62,44,4],[30,58,2.5],[72,58,2.5]],p:['M20,84V46 Q20,16 50,16 Q80,16 80,46V84L68,74 56,84 44,74 32,84Z','M44,62 Q50,68 56,62','M20,54 Q8,58 12,70','M80,54 Q92,58 88,70']},
+{n:'눈사람',c:[[50,28,18],[50,66,26],[44,24,2],[56,24,2]],p:['M28,54 10,46','M72,54 90,46','M32,14H68','M36,14V6H64V14','M50,60V74']},
+{n:'산',c:[[80,22,10]],p:['M4,82 32,28 50,58 64,34 96,82Z','M22,50 32,42 42,52','M56,46 64,38 72,50','M4,82H96','M8,24 Q14,18 20,24','M24,16 Q30,10 36,16']},
+{n:'무지개',p:['M10,80 A40,40 0 0,1 90,80','M20,80 A30,30 0 0,1 80,80','M30,80 A20,20 0 0,1 70,80','M40,80 A10,10 0 0,1 60,80','M6,80 Q0,70 10,68 Q14,58 26,64 Q34,62 34,80Z','M94,80 Q100,70 90,68 Q86,58 74,64 Q66,62 66,80Z']},
+{n:'야자수 섬',p:['M8,84 Q50,72 92,84','M52,84 Q46,52 50,34','M50,34 Q30,26 20,40','M50,34 Q70,24 82,38','M50,34 Q42,14 26,16','M50,34 Q64,16 76,22']},
+{n:'텐트',p:['M10,84 50,18 90,84Z','M50,18V84','M36,84 50,54 64,84','M6,84H94','M50,18V6','M50,6H70L66,12 70,18H50']},
+{n:'성',p:['M14,88V36H86V88Z','M14,36V22H26V32H38V22H50V32H62V22H74V32H86V22','M40,88V62 Q50,52 60,62V88','M24,46H36V58H24Z','M64,46H76V58H64Z','M20,22V10 34,14 20,18','M80,22V10 66,14 80,18']},
+{n:'등대',p:['M34,88 40,40H60L66,88Z','M36,56H64','M34,40H66V28H34Z','M40,28 44,14H56L60,28','M50,14V6','M34,34 12,26','M66,34 88,26']},
+{n:'풍차',c:[[50,26,4]],p:['M36,88 44,40H56L64,88Z','M50,40V30','M50,26 26,10','M50,26 74,10','M50,26 34,50','M50,26 66,50']},
+{n:'축구공',c:[[50,50,34]],p:['M50,30 66,42 60,62H40L34,42Z','M50,30V16','M66,42 80,38','M60,62 70,76','M40,62 30,76','M34,42 20,38']},
+{n:'농구공',c:[[50,48,32]],p:['M50,16V80','M18,48H82','M28,26 Q44,48 28,70','M72,26 Q56,48 72,70','M28,92 Q50,86 72,92']},
+{n:'음표',c:[[24,74,11],[54,66,11],[84,76,10]],p:['M35,74V26 65,16V66','M35,36 65,26','M95,76V28','M95,28 Q86,22 82,32']}
+];
+
+const WORDS=['소풍','김밥','라면','떡볶이','놀이터','미끄럼틀','그네','축구','야구','줄넘기',
+'자전거 타기','수영','눈싸움','낙엽','소나기','무지개','태풍','화산','사막','정글',
+'우주여행','외계인','로봇','공룡','유니콘','용','마법사','마녀','해적','보물지도',
+'왕자','공주','기사','도둑','경찰','소방관','의사','요리사','화가','가수',
+'선생님','농부','우주인','잠수부','등산','캠핑','낚시','텐트','모닥불','별똥별',
+'보름달','해돋이','폭포','강','바다','섬','등대','다리','기차역','공항',
+'버스정류장','병원','학교','도서관','시장','빵집','미용실','놀이공원','관람차','회전목마',
+'동물원','수족관','박물관','영화관','생일파티','케이크','선물','크리스마스','산타','설날',
+'세배','추석','송편','김치','삼겹살','짜장면','치킨','팝콘','솜사탕','아이스크림',
+'수박화채','감기','꿈','치과','목욕','빨래','청소','요리','숙제','낮잠'];
+
+/* ────────── 상태 ────────── */
+const COLORS=['#E23B3B','#F0762A','#F2B705','#8CC63F','#2AA84A','#20B2AA',
+              '#2E86DE','#3F3FBF','#8E44AD','#D6409F','#8B5E3C','#2B2B2B'];
+const CNAMES=['빨강','주황','노랑','연두','초록','청록','파랑','남색','보라','분홍','갈색','검정'];
+const HIDE_FROM=2;   // 3획째부터 가리기
+
+const S={team:'', members:4, version:'pic', hideTime:true,
+         round:0, idx:null, used:[], strokes:[], t0:0, elapsed:0, tid:null,
+         bad:0, penalty:5, records:[]};
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  document.getElementById('homeBtn').classList.toggle('on', id!=='home');
+  window.scrollTo(0,0);
+}
+function goHome(){
+  if(S.round>0 && !confirm('처음 화면으로 돌아갈까요? 지금까지 기록이 사라져요.')) return;
+  stopTimer(); S.round=0; S.used=[]; S.records=[]; S.strokes=[]; S.idx=null;
+  go('home');
+}
+function itemName(i){ return S.version==='word' ? WORDS[i] : PICS[i].n; }
+function strokeCount(p){ return (p.p?p.p.length:0)+(p.c?p.c.length:0); }
+function picSVG(pic){
+  let s='<svg viewBox="0 0 100 100"><g fill="none" stroke="#141A3A" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">';
+  (pic.c||[]).forEach(c=>s+='<circle cx="'+c[0]+'" cy="'+c[1]+'" r="'+c[2]+'"/>');
+  (pic.p||[]).forEach(d=>s+='<path d="'+d+'"/>');
+  return s+'</g></svg>';
+}
+
+/* ────────── 홈 ────────── */
+function buildHome(){
+  const box=document.getElementById('memberChips'); box.innerHTML='';
+  for(let i=2;i<=9;i++){
+    const b=document.createElement('button');
+    b.className='chip'+(i===S.members?' sel':'');
+    b.textContent=i+'명';
+    b.onclick=()=>{S.members=i;buildHome();};
+    box.appendChild(b);
+  }
+}
+buildHome();
+document.querySelectorAll('#verToggle button').forEach(b=>{
+  b.onclick=()=>{document.querySelectorAll('#verToggle button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); S.version=b.dataset.v;};
+});
+document.querySelectorAll('#hideToggle button').forEach(b=>{
+  b.onclick=()=>{document.querySelectorAll('#hideToggle button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); S.hideTime=b.dataset.h==='1';};
+});
+function startGame(){
+  S.team=(document.getElementById('teamName').value||'').trim();
+  S.round=0; S.used=[]; S.records=[];
+  nextRound();
+}
+
+/* ────────── 번호 고르기 ────────── */
+function showPick(){
+  go('pick');
+  document.getElementById('pickRound').textContent=(S.team? S.team+' · ':'')+S.round+'라운드';
+  document.getElementById('pickTitle').textContent=
+    (S.version==='word'?'낱말 번호를 눌러요':'그림 번호를 눌러요');
+  const g=document.getElementById('numGrid'); g.innerHTML='';
+  const total = S.version==='word' ? WORDS.length : PICS.length;
+  for(let i=0;i<total;i++){
+    const b=document.createElement('button');
+    b.className='num'+(S.used.includes(i)?' used':'');
+    b.textContent=i+1;
+    b.onclick=()=>choose(i);
+    g.appendChild(b);
+  }
+}
+function pickRandom(){
+  const total=S.version==='word'?WORDS.length:PICS.length;
+  const left=[...Array(total).keys()].filter(i=>!S.used.includes(i));
+  choose((left.length?left:[...Array(total).keys()])[Math.floor(Math.random()*(left.length||total))]);
+}
+function choose(i){
+  S.idx=i; go('ready');
+  document.getElementById('readyRound').textContent=S.round+'라운드 · '+(i+1)+'번';
+  const box=document.getElementById('readyRef');
+  if(S.version==='word'){
+    box.innerHTML='<div class="word">'+WORDS[i]+'</div><span>'+(i+1)+'번 낱말 · 보고 상상해서 그려요</span>';
+    document.getElementById('readyTip').innerHTML=
+      '그릴 <b>순서를 정한 뒤</b> 시작을 누르세요.<br>한 사람이 한 획씩!';
+  } else {
+    box.innerHTML=picSVG(PICS[i])+'<b>'+(i+1)+'번 · '+PICS[i].n+'</b><span>약 '+strokeCount(PICS[i])+'획이면 완성돼요</span>';
+    document.getElementById('readyTip').innerHTML=
+      '그릴 <b>순서를 정한 뒤</b> 시작을 누르세요.<br>그림과 똑같이, 한 사람이 한 획씩!';
+  }
+}
+
+/* ────────── 타이머 ────────── */
+function fmt(ms){
+  const s=ms/1000;
+  if(s<60) return s.toFixed(1)+'초';
+  return Math.floor(s/60)+'분 '+(s%60<10?'0':'')+(s%60).toFixed(1)+'초';
+}
+function startTimer(){
+  stopTimer(); S.t0=performance.now(); S.elapsed=0;
+  S.tid=setInterval(()=>{S.elapsed=performance.now()-S.t0;paintTimer();},57);
+  paintTimer();
+}
+function stopTimer(){ if(S.tid){clearInterval(S.tid);S.tid=null;} }
+function paintTimer(){
+  const t=document.getElementById('timer'), n=document.getElementById('timerNote');
+  if(S.hideTime && S.strokes.length>=HIDE_FROM){
+    t.classList.add('hidden-mode'); t.textContent='🙈  ? ? ?';
+    n.textContent='시간은 비밀! 계속 흐르고 있어요';
+  } else {
+    t.classList.remove('hidden-mode'); t.textContent=fmt(S.elapsed);
+    n.textContent = S.hideTime ? (HIDE_FROM-S.strokes.length)+'획 뒤부터 시간이 사라져요' : '시간이 흐르고 있어요';
+  }
+}
+
+/* ────────── 그리기 ────────── */
+const cv=document.getElementById('cv');
+let cur=null, drawingNow=false;
+function sizeCanvas(c){
+  const dpr=Math.min(window.devicePixelRatio||1,2.5), r=c.getBoundingClientRect();
+  c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr);
+}
+function paint(c,list,extra){
+  const g=c.getContext('2d'); if(!g) return;
+  const w=c.width,h=c.height;
+  g.setTransform(1,0,0,1,0,0);
+  g.fillStyle='#FFFDF6'; g.fillRect(0,0,w,h);
+  g.lineCap='round'; g.lineJoin='round'; g.lineWidth=Math.max(3,w*0.011);
+  const one=st=>{
+    if(!st||!st.pts.length) return;
+    g.strokeStyle=st.color; g.beginPath();
+    st.pts.forEach((p,i)=> i? g.lineTo(p.x*w,p.y*h) : g.moveTo(p.x*w,p.y*h));
+    if(st.pts.length===1) g.lineTo(st.pts[0].x*w+0.6, st.pts[0].y*h);
+    g.stroke();
+  };
+  list.forEach(one); if(extra) one(extra);
+}
+function redraw(){ paint(cv,S.strokes,cur?{pts:cur,color:curColor()}:null); }
+function curColor(){ return COLORS[S.strokes.length%COLORS.length]; }
+function pos(e){
+  const r=cv.getBoundingClientRect();
+  return {x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),
+          y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))};
+}
+cv.addEventListener('pointerdown',e=>{
+  if(cur) return;
+  drawingNow=true; cur=[pos(e)];
+  try{cv.setPointerCapture(e.pointerId);}catch(_){}
+  document.getElementById('hint').style.display='none';
+  redraw();
+});
+cv.addEventListener('pointermove',e=>{
+  if(!drawingNow) return;
+  const p=pos(e), last=cur[cur.length-1];
+  if(Math.hypot(p.x-last.x,p.y-last.y)<0.004) return;
+  cur.push(p); redraw();
+});
+function commit(){
+  if(!drawingNow) return;
+  drawingNow=false;
+  if(cur&&cur.length) S.strokes.push({pts:cur,color:curColor()});
+  cur=null; updateTurn(); redraw(); paintTimer();
+}
+cv.addEventListener('pointerup',commit);
+cv.addEventListener('pointercancel',commit);
+cv.addEventListener('pointerleave',commit);
+window.addEventListener('resize',()=>{
+  if(document.getElementById('s-draw').classList.contains('on')){sizeCanvas(cv);redraw();}
+});
+function undoStroke(){
+  if(!S.strokes.length) return;
+  S.strokes.pop(); updateTurn(); redraw(); paintTimer();
+}
+function updateTurn(){
+  const n=S.strokes.length;
+  document.getElementById('turnWho').textContent=((n%S.members)+1)+'번 차례';
+  document.getElementById('turnCount').textContent=(n+1)+'획째';
+  document.getElementById('swatch').style.background=curColor();
+  document.getElementById('crayonName').textContent=CNAMES[n%COLORS.length]+' 크레용';
+}
+function beginRound(){
+  S.strokes=[]; cur=null; drawingNow=false;
+  go('draw');
+  const ref=document.getElementById('drawRef');
+  if(S.version==='word'){
+    ref.innerHTML='<div class="meta" style="width:100%;text-align:center"><b style="font-family:Gaegu,cursive;font-size:clamp(28px,8vw,44px)">'
+      +WORDS[S.idx]+'</b><span>'+(S.idx+1)+'번 낱말 · 한 사람이 한 획씩</span></div>';
+  } else {
+    ref.innerHTML=picSVG(PICS[S.idx])+'<div class="meta"><b>'+(S.idx+1)+'번 · '+PICS[S.idx].n+
+      '</b><span>약 '+strokeCount(PICS[S.idx])+'획 · 한 사람이 한 획씩</span></div>';
+  }
+  document.getElementById('hint').style.display='';
+  updateTurn(); startTimer();
+  requestAnimationFrame(()=>{sizeCanvas(cv);redraw();});
+}
+
+/* ────────── 결과 ────────── */
+function totalOf(r){ return r.time + r.bad*r.penalty*1000; }
+function endRound(){
+  if(S.strokes.length<S.members &&
+     !confirm('아직 '+S.strokes.length+'획이에요. 모둠원이 모두 그렸나요?')) return;
+  stopTimer();
+  if(!S.used.includes(S.idx)) S.used.push(S.idx);
+  S.bad=0;
+  const rec={round:S.round, idx:S.idx, version:S.version, time:S.elapsed,
+             strokes:S.strokes.slice(), bad:0, penalty:S.penalty};
+  S.records.push(rec);
+  go('result');
+  document.getElementById('resRound').textContent=(S.team? S.team+' · ':'')+S.round+'라운드 기록';
+  const drum=document.getElementById('drum'), body=document.getElementById('resBody');
+  drum.style.display=''; body.style.display='none';
+  document.getElementById('finalTime').classList.remove('pop');
+  beat(3);
+  setTimeout(()=>{
+    drum.style.display='none'; body.style.display='';
+    document.getElementById('finalTime').classList.add('pop');
+    ding();
+    const c=document.getElementById('resCv'); c.style.aspectRatio='4/3';
+    requestAnimationFrame(()=>{sizeCanvas(c);paint(c,S.strokes);});
+    buildPenChips(); renderResult();
+  },1800);
+}
+function buildPenChips(){
+  const box=document.getElementById('penChips'); box.innerHTML='';
+  [3,5,10,15].forEach(p=>{
+    const b=document.createElement('button');
+    b.className='chip'+(p===S.penalty?' sel':'');
+    b.textContent='+'+p+'초';
+    b.onclick=()=>{S.penalty=p; cr().penalty=p; buildPenChips(); renderResult();};
+    box.appendChild(b);
+  });
+}
+function cr(){ return S.records[S.records.length-1]; }
+function addBad(d){
+  const r=cr(); r.bad=Math.max(0,r.bad+d); S.bad=r.bad; renderResult();
+}
+function renderResult(){
+  const r=cr();
+  document.getElementById('badVal').textContent=r.bad;
+  document.getElementById('finalTime').textContent=fmt(totalOf(r));
+  document.getElementById('calcLine').innerHTML=
+    (S.version==='word'? (r.idx+1)+'번 낱말 <b>'+WORDS[r.idx]+'</b>' : (r.idx+1)+'번 <b>'+PICS[r.idx].n+'</b>')
+    +' · 모두 <b>'+r.strokes.length+'획</b><br>그린 시간 '+fmt(r.time)
+    +(r.bad? ' + 벌점 '+(r.bad*r.penalty)+'초 (엉성한 획 '+r.bad+'개 × '+r.penalty+'초)' : ' · 벌점 없음');
+  const rl=document.getElementById('rankList'); rl.innerHTML='';
+  S.records.forEach(x=>{
+    const d=document.createElement('div'); d.className='r';
+    const nm = x.version==='word'? WORDS[x.idx] : PICS[x.idx].n;
+    d.innerHTML='<span>'+x.round+'라운드 · '+(x.idx+1)+'번 '+nm+(x.bad?' (−'+x.bad+'획)':'')+'</span><b>'+fmt(totalOf(x))+'</b>';
+    rl.appendChild(d);
+  });
+}
+function nextRound(){ S.round++; S.strokes=[]; showPick(); }
+
+/* ────────── 소리 ────────── */
+let AC=null;
+function tone(freq,dur,when,vol){
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type='triangle'; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol||0.12, AC.currentTime+when);
+    g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime+when+dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(AC.currentTime+when); o.stop(AC.currentTime+when+dur+0.02);
+  }catch(_){}
+}
+function beat(n){ for(let i=0;i<n;i++) tone(200,0.12,i*0.45,0.09); }
+function ding(){ [523,659,784,1047].forEach((f,i)=>tone(f,0.4,i*0.07,0.14)); }
+</script>
+</body>
+</html>
